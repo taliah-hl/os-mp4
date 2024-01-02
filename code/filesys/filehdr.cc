@@ -75,7 +75,7 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 
 	for (int i = 0; i < numSectors; i++)
 	{
-		dataSectors[i] = freeMap->FindAndSet();
+		dataSectors[i] = freeMap->FindAndSet(); 
 		// since we checked that there was enough free space,
 		// we expect this to succeed
 		ASSERT(dataSectors[i] >= 0);
