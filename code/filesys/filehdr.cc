@@ -80,6 +80,8 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return tr
 	// dataSectors 每一格存這個file 的哪個sector對應到disk 上面第幾個sector(=bitmap上第幾個index)
 	for (int i = 0; i < numSectors; i++)
 	{
+
+
 		dataSectors[i] = freeMap->FindAndSet();		// 找出freeMap中第一格not in use 的index
 													// if -1 means all are used
 		// since we checked that there was enough free space,
