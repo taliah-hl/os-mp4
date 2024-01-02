@@ -59,6 +59,7 @@ const int NumSectors = (SectorsPerTrack * NumTracks); // total # of sectors per 
 
 - 一個disk 只有一個freeMap (should be)
 - 記錄disk上的哪些sector是free的
+- freeMap 的一格->對應一個sector
 
 |method|description|
 |---|---|
@@ -67,8 +68,8 @@ const int NumSectors = (SectorsPerTrack * NumTracks); // total # of sectors per 
 
 
 ## Concept 
-- bitmap 該格 = 0 = not set = clear = not in use
-- bitmap 該格 = 1 = set = not clear = in use
+- bitmap 該格 = 0 = 該sector not set = clear = not in use
+- bitmap 該格 = 1 = 該sector set = not clear = in use
 
 ### filehdr.h (未詳看)
 
@@ -125,5 +126,15 @@ ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
 
 ```
 
+### (4)
+
+- inode 應該就是 file header
+- file header 應該要有:
+  - file's current size (類似allocate了的之中有多少是真的有用到的) (其他可能只是垃圾資訊(未初始化/之前沒flush到的))
+  - allocate (分配)給file的sector數量
+  - array of sector numbers (告知file的data block貯存在哪些sector)
+  - (pointer to physical disk block?) (不確定)
+
+
 ### (5)
-32 (忘記在哪看到)
+32 (忘記在哪看到) (可能不是,要再確認)
