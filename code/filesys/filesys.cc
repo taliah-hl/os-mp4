@@ -18,6 +18,11 @@
 //	(sector 0 and sector 1), so that the file system can find them
 //	on bootup.
 //
+//  !!!!!!   ------ IN SHORT  -----  [BY ME]  !!!!!!
+//
+//      bitmap on Sector 0
+//      directory on Sector 1
+//
 //	The file system assumes that the bitmap and directory files are
 //	kept "open" continuously while Nachos is running.
 //
@@ -62,8 +67,22 @@
 // supports extensible files, the directory size sets the maximum number
 // of files that can be loaded onto the disk.
 #define FreeMapFileSize (NumSectors / BitsInByte)
+// bitmap 的初始大小(應該是)
+// = total number of sectors / number of bits in a byte
+// unit should be bytes (to be confirmed)
+//
+//未改code 前:
+////NumSectors=SectorsPerTrack * NumTracks=32*32=1024 (from machine/disk.h)
+
 #define NumDirEntries 10
+// = directory 可有多少entry
+// =可裝多少file
+// = 未改code 之前只可裝10個file
+
+
 #define DirectoryFileSize (sizeof(DirectoryEntry) * NumDirEntries)
+// directory file 佔的空間
+// DirectoryEntry = directory 的一格 (一個entry)
 
 //----------------------------------------------------------------------
 // FileSystem::FileSystem
@@ -83,10 +102,13 @@ FileSystem::FileSystem(bool format)
     DEBUG(dbgFile, "Initializing the file system.");
     if (format)
     {
-        PersistentBitmap *freeMap = new PersistentBitmap(NumSectors);
+
+        // 一個disk 只有一個freeMap (should be)
+        PersistentBitmap *freeMap = new PersistentBitmap(NumSectors);   //NumSectors=1024 for now
+        //開一個1024格的map
         Directory *directory = new Directory(NumDirEntries);
-        FileHeader *mapHdr = new FileHeader;
-        FileHeader *dirHdr = new FileHeader;
+        FileHeader *mapHdr = new FileHeader;    //file hdr for bitmap
+        FileHeader *dirHdr = new FileHeader;    //file hdr for directory
 
         DEBUG(dbgFile, "Formatting the file system.");
 
@@ -98,7 +120,9 @@ FileSystem::FileSystem(bool format)
         // Second, allocate space for the data blocks containing the contents
         // of the directory and bitmap files.  There better be enough space!
 
-        ASSERT(mapHdr->Allocate(freeMap, FreeMapFileSize));
+
+        // Allocate: from filehdr.cc        
+        ASSERT(mapHdr->Allocate(freeMap, FreeMapFileSize));          //FreeMapFileSize=bitmap 的初始大小
         ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
 
         // Flush the bitmap and directory FileHeaders back to disk

@@ -86,7 +86,7 @@ void Bitmap::Clear(int which)
 //	"which" is the number of the bit to be tested.
 //----------------------------------------------------------------------
 
-bool Bitmap::Test(int which) const
+bool Bitmap::Test(int which) const      //which: which bit to test
 {
     ASSERT(which >= 0 && which < numBits);
 
@@ -109,11 +109,11 @@ bool Bitmap::Test(int which) const
 //	If no bits are clear, return -1.
 //----------------------------------------------------------------------
 
-int Bitmap::FindAndSet()
+int Bitmap::FindAndSet()        // return first entry of the bitmap that is not in use
 {
     for (int i = 0; i < numBits; i++)
     {
-        if (!Test(i))
+        if (!Test(i))       // !Test(i)=the ith bit is not set = clear= not in use
         {
             Mark(i);
             return i;
@@ -121,6 +121,7 @@ int Bitmap::FindAndSet()
     }
     return -1;
 }
+// not set = 0 = clear = not in use
 
 //----------------------------------------------------------------------
 // Bitmap::NumClear

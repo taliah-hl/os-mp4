@@ -79,8 +79,11 @@ private:
 
 	int numBytes;				// Number of bytes in the file
 	int numSectors;				// Number of data sectors in the file
-	int dataSectors[NumDirect]; // Disk sector numbers for each data
+	int dataSectors[NumDirect]; // Disk sector numbers for each data ///?????? what is this???
 								// block in the file
+
+	// dataSectors
+	// 類似幫你找你想要的資料在哪個sector number (需再了解)
 };
 
 #endif // FILEHDR_H

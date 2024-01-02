@@ -26,6 +26,14 @@
 // making a request, it waits around until the operation finishes before
 // returning.
 
+//   -------
+// 正常NahOS file system還會有:
+//RequestDone():
+//  Interrupt service routine the underlying Disk object 
+//  calls when an I/O operation completes. 
+//  Simply issues the semaphore V operation.
+//
+
 class SynchDisk : public CallBackObj
 {
 public:
