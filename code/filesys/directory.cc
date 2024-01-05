@@ -113,7 +113,7 @@ int Directory::FindIndex(char *name)    //find by name, reuturn index in directo
 //	"name" -- the file name to look up
 //----------------------------------------------------------------------
 
-int Directory::Find(char *name)   //find by name, return sector number of that file
+int Directory::Find(char *name)   //find by file name, return sector number of that file
 {
     int i = FindIndex(name);
 

@@ -30,6 +30,7 @@ OpenFile::OpenFile(int sector)
 {
     hdr = new FileHeader;
     hdr->FetchFrom(sector);
+    // FetchFrom即從Disk讀該sector
     seekPosition = 0;
 }
 
@@ -70,13 +71,15 @@ void OpenFile::Seek(int position)
 //----------------------------------------------------------------------
 
 int OpenFile::Read(char *into, int numBytes)
+// ReadAt return numBytes read from readAt
 {
     int result = ReadAt(into, numBytes, seekPosition);
+    // ReadAt return numBytes read
     seekPosition += result;
     return result;
 }
 
-int OpenFile::Write(char *into, int numBytes)
+int OpenFile::Write(char *into, int numBytes)    // return num byte written
 {
     int result = WriteAt(into, numBytes, seekPosition);
     seekPosition += result;
@@ -110,6 +113,7 @@ int OpenFile::Write(char *into, int numBytes)
 //----------------------------------------------------------------------
 
 int OpenFile::ReadAt(char *into, int numBytes, int position)
+// return: numBytes read
 {
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;
@@ -137,8 +141,9 @@ int OpenFile::ReadAt(char *into, int numBytes, int position)
     return numBytes;
 }
 
-int OpenFile::WriteAt(char *from, int numBytes, int position)
+int OpenFile::WriteAt(char *from, int numBytes, int position)   // return num byte written
 {
+    
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;
     bool firstAligned, lastAligned;

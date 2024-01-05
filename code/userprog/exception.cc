@@ -77,7 +77,7 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		// MP4 mod tag
 #ifdef FILESYS_STUB
-// ifdef FILESYS_STUB - >means us UNIX Fs (nachos itself no real FS)
+// ifdef FILESYS_STUB - >means use UNIX FS (nachos itself no real FS)
 		case SC_Create:
 			val = kernel->machine->ReadRegister(4);
 			{
