@@ -219,8 +219,11 @@ bool FileSystem::Create(char *name, int initialSize)
 
     DEBUG(dbgFile, "Creating file " << name << " size " << initialSize);
 
-    directory = new Directory(NumDirEntries);
-    directory->FetchFrom(directoryFile);
+    directory = new Directory(NumDirEntries);  
+    directory->FetchFrom(directoryFile);    //fetch directory from disk
+     //why create new directory when create file?
+    // -> everytime when create file, need to fetch directory from disk 
+    // -> get latest true status of directory in disk
 
     if (directory->Find(name) != -1)
         success = FALSE; // file is already in directory
@@ -228,6 +231,9 @@ bool FileSystem::Create(char *name, int initialSize)
     {
         freeMap = new PersistentBitmap(freeMapFile, NumSectors);
         sector = freeMap->FindAndSet(); // find a sector to hold the file header
+        // need to do everytime when create file
+        // cuz need to know latest status of sector
+        // and find a free sector to hold the file header of new file
         if (sector == -1)
             success = FALSE; // no free block for file header
         else if (!directory->Add(name, sector))

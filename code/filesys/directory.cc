@@ -65,7 +65,13 @@ Directory::~Directory()
 
 void Directory::FetchFrom(OpenFile *file)
 {
+    //file is the directory file on disk
+    
     (void)file->ReadAt((char *)table, tableSize * sizeof(DirectoryEntry), 0);
+    // ReadAt(char *into, int numBytes, int position)
+    // *into = where to store the read data
+    // so this is reading into the table
+    // after FetchFrom, table now is the directory table on disk (updated(?))
 }
 
 //----------------------------------------------------------------------
@@ -78,6 +84,8 @@ void Directory::FetchFrom(OpenFile *file)
 void Directory::WriteBack(OpenFile *file)
 {
     (void)file->WriteAt((char *)table, tableSize * sizeof(DirectoryEntry), 0);
+    // WriteAt(char *from, int numBytes, int position)
+    // write back directory to disk
 }
 
 //----------------------------------------------------------------------
@@ -88,7 +96,7 @@ void Directory::WriteBack(OpenFile *file)
 //	"name" -- the file name to look up
 //----------------------------------------------------------------------
 
-int Directory::FindIndex(char *name)
+int Directory::FindIndex(char *name)    //find by name, reuturn index in directory
 {
     for (int i = 0; i < tableSize; i++)
         if (table[i].inUse && !strncmp(table[i].name, name, FileNameMaxLen))
@@ -105,7 +113,7 @@ int Directory::FindIndex(char *name)
 //	"name" -- the file name to look up
 //----------------------------------------------------------------------
 
-int Directory::Find(char *name)
+int Directory::Find(char *name)   //find by name, return sector number of that file
 {
     int i = FindIndex(name);
 
@@ -178,6 +186,8 @@ void Directory::List()
 //----------------------------------------------------------------------
 
 void Directory::Print()
+//print info of all inUse file
+// inc. name, sector, fileheader (shld be?)
 {
     FileHeader *hdr = new FileHeader;
 

@@ -29,7 +29,7 @@ Directory::Directory(int size)
 
 - Max file size: 3KB
 - no synchronization for concurrent accesses
-- Max number of files: limited (不知道多少)
+- Max number of files: 10
 
 - bitmap that indicates which sectors are free -> on Sector 0
 ```cpp
@@ -81,16 +81,16 @@ When you want to read or write data from/to the file, you would use the dataSect
 
 The dataSectors array is part of the "disk part" of the FileHeader class, which means it gets written to the disk when the file header is saved.
 
-# !!! need to read what is `dataSectors` !!!
 
-參考資料
 
-# A road map through Nachos
+# 參考資料
+
+## A road map through Nachos
 https://users.cs.duke.edu/~narten/110/nachos/main/main.html
 
 https://users.cs.duke.edu/~narten/110/nachos/main/node25.html#SECTION00063000000000000000
 
-# Lab5_FileSystem of some scl (github 解釋+架構圖)
+## Lab5_FileSystem of some scl (github 解釋+架構圖)
 https://github.com/daviddwlee84/OperatingSystem/blob/master/Lab/Lab5_FileSystem/README.md
 
 - Nachos file header = Unix's inode (ch11)
@@ -137,4 +137,14 @@ ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
 
 
 ### (5)
-32 (忘記在哪看到) (可能不是,要再確認)
+3KB
+
+filesys.cc 原本給的comment裡說的
+
+不知道實際在code 的哪裡限制
+
+```cpp
+// filesys.cc
+//	   files cannot be bigger than about 3KB in size
+
+```
