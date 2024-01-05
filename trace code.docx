@@ -1,0 +1,169 @@
+1.	filesys.cc
+虛擬file system的實現，描述了file system的基本操作(e.x.創建、刪除)。例如從文字檔案到實際檔案的map。
+每個file有三個部分:file header(存在disk中的sector) 、data block(存取data的block)和FS中的entry(描述file在file system 中的位置)
+File system中會有兩個部分:bitmap(紀錄那些sector是free的，在bitmap中定義)和目錄(記錄了file name和相應的file header)。在初始化時會將他們兩個分別放在sector1和sector2。
+他缺乏同步設計 + 固定大小的file + file size不能大於3KB。
+(1)	FileSystem::FileSystem()
+負責初始化file system。如果format是true，則代表需要進行初始化(通常發生在sector為空的情況下)，需要建立一個bitmap和目錄。若是format是flase則代表已經初始化過了，只要打開bitmap和目錄即可。
+呼叫Bitmap的mark()和Print()，呼叫OpenFile的Openfile()，呼叫FileHeader的WriteBack()。
+95+96+132+133，117+118+144+145，110+111。
+(2)	FileSystem::~FileSystem()
+將FileSystem的相關資源(freeMapFile+directoryFile)釋放。
+(3)	FileSystem::Create()
+在Nachos的system中創建一個file。
+若file不存在再為他分配一個sector，並為data block也分配區域，將file name添加到目錄中，並將file header寫回sector，若失敗則找尋失敗原因，最後釋放資源。
+呼叫Directory的Directory()和FetchFrom()和Find()和Add()，呼叫Bitmap的FindAndSet()，呼叫FileHeader的WrieBack()。
+198+199+201+209，206，220+221+222。
+(4)	FileSystem::Open()
+負責打開一個file，他會讀取目錄訊息，查找sector，找到則返回OpenFile對象，若們有責返回NULL。前提是目錄中存在唯一的sector number，並且只是簡單地打開文件，沒有指定只讀、讀寫等模式。
+呼叫Directory的Directory()和FetchFrom()和Find()，呼叫OpenFile的OpenFile()。
+244+249+250，252。
+(5)	FileSystem::Remove()
+負責刪除一個file。一樣先找到該file，若成功刪除則更新bitmap和目錄，若文件不存在則返回Flase。
+呼叫Directory的Directory()和FetchFrom()和Find()和Remove()和WrireBack()，呼叫FileHeader的FileHeader()和FetchFrom()和Deallocate()，呼叫Bitmap的Clear()。
+278+279+280+293+296，286+287+291，292。
+(6)	FileSystem::List()
+負責列舉所有file system目錄中的所有文件，並將他們output到某個設備。
+呼叫Directory的Directory()和FetchFrom()和List ()。
+310+312+313。
+(7)	FileSystem::Print()
+負責打印所有file system的所有訊息，包括bitmap的內容、每個file的header和data。
+呼叫FileHeader的FileHeader()和FetchFrom()和Print()，呼叫Directory的Directory()和FetchFrom()和Print()，呼叫Bitnap的Print()。
+329+330+335+336+339+340，332+344+345，342。
+
+2.	openfile.cc
+關於打開file的實現，會再需要read或write前打開file並在完成後關閉它。另外為了方便，在打開file的同時fi.e header會保留在memory中。
+(1)	OpenFile::OpenFile()
+負責打開一個file並且把file header存到memory中。
+(2)	OpenFile::~OpenFile()
+在關閉file時釋放相關資源(fileheader)。
+(3)	OpenFile::Seek()
+負責標示file中的當前位置，表示下一個read和write將從指定位置開始。
+(4)	OpenFile::Read()
+用於read或write文件，它會呼叫ReadAt()或WriteAt()並以seekPosition為起點進行讀取或寫入操作，最後更新seekPosition。
+(5)	OpenFile::ReadAt()
+負責從指定位置開始讀取一段data，並將它存儲在buffer中，並返回實際讀取#Bytes，並且確認讀取範圍有在file範圍內。
+(6)	OpenFile::WriteAt()
+負責從指定位置開始寫入一段data，data來自buffer中，並返回實際寫入#Bytes，並且確認寫入範圍有在file範圍內。
+(7)	OpenFile::Length()
+負責返回file的#Bytes，也就是文件的size。
+
+3.	directory.cc
+用於管理file name的目錄。目錄是一個固定長度entry的表格，每個entry表示一個單獨的file，包含file name和file header的位置。
+(1)	Directory::Directory()
+負責初始化一個目錄，初始化時目錄是完全空的，並且每個entry的狀態都是未使用的。
+(2)	Directory::~ Directory()
+負責釋放目錄data struction的memory。
+(3)	Directory::FetchFrom()
+負責讀取目錄的內容，透過讀取disk上的data將目錄初始化為指定file中的內容。會呼叫ReadAt()從0開始讀取entry然後存儲在table中。
+(4)	Directory::WriteBack()
+負責將對目錄的修改寫回disk中，會呼叫WriteAt()從0開始將table中的內容寫入disk，以保存對目錄的修改。
+(5)	Directory::FindIndex()
+負責在目錄中找尋file name，並返回其位置，如果不存在返回-1。
+它會用迴圈一條一條尋找它是否有被使用，且file name是否與目標相同，若找完整個目錄都沒有找到責返回-1。
+(6)	Directory::Find()
+負責在目錄中找尋file name，並返回其number，如果不存在返回-1。
+它會呼叫FindIndex，如果找到責返回該entry對應的number，如果沒有找到鑿返回-1。
+(7)	Directory::Add()
+負責添加一個file到目錄中，如果添加成功責返回TURE，如果目錄中已經有相同file name的file或是目錄已滿責返回Flase。
+它會先呼叫FindIndex()檢查它是否已存在於目錄中，然後遍歷木度的entry table，找到第一個沒有被使用的entry，找到後將它標示為已使用，並將file name複製到entry中，並返回TRUE表示添加成功。若遍歷完整個目錄沒有找到未使用的entry則代表目錄已滿，返回FLASE。
+(8)	Directory::Remove()
+負責刪除一個file name，如果成功刪除責返回TURE，如果目錄中沒有該file name責返回FLASE。
+呼叫FindIndex找尋目標file name，如果有找到則將該entry標示為未使用，返回TRUE表示成功刪除。若沒有找到符合entry責返回FLASE，表示該file name不在文件中。
+(9)	Directory::Find()
+負責列舉目錄中所有的entry。
+它會遍歷所有entry，判斷該entry是否有被使用，如果有則printf它。
+(10)	Directory::Print()
+負責列舉所有的file name和其對應的fileheader位置以及每個file的內容。
+它會遍歷所有entry，判斷該entry是否有被使用，如果有則printf它的file name、fileheader和file的內容。
+
+4.	filehdr.cc
+實現了fileheader的相關功能，fileheader用於定位file data在disk上的存儲位置。
+(1)	FileHeader:: FileHeader()
+將numBytes、numSector、dataSectors的值皆設為-1，這樣如果未正確初始化的話將會被檢測出來，並給予警告。是一個保護性的措施。
+(2)	FileHeader::~ FileHeader()
+目前沒有需要釋放的資源，但若是之後有添加一些在memeory中維護的data時，就需要記得釋放資源。
+(3)	FileHeader::Allocate()
+分配fileheader所需的data block，如果分配成功則返回TURE，若失敗則返回FLASE。目的是為新創建的file初始化一個fileheader，他會判斷需要多少的空間容納file，如果沒有足夠的空間則返回FLASE，如果有則將該sector設為已使用，然後返回TURE。
+(4)	FileHeader::Deallocate()
+釋放該file分配的所有data block空間。將所有被標示為已使用的sector釋放，並將它標示為未使用。
+(5)	FileHeader::FetchFrom()
+從disk讀取file header的內容。
+在添加一些信息後需要重新構建fileheader的結構，這表明在未給出詳細內容的情況下，可能需要修改處理額外的core訊息。
+(6)	FileHeader::WriteBack()
+將修改過的file header寫回disk。
+建議在添加一些內核信息之後，可能不希望將所有字段都寫回disk。建議使用'memcpy'函數將要寫入的data從buffer複製到sector的合適位置。這可以用來選擇性地寫回特定的字段而不是整個fileheader。
+(7)	FileHeader::ByteToSector()
+根據file內特定byte的virtual address(file中的偏移量)返回存儲該byte的sector。
+(8)	FileHeader::FileLength()
+返回file的長度。它會直接返回numBytes值。
+(9)	FileHeader::Print()
+將fileheader的內容打印到控制台，用於調試和除錯。
+會打印fileheader信息，包括file size和file所占用的data block的sector number，並打印file內容。
+
+5.	synchdisk.cc
+用於同步訪問disk，提供了對disk的同步訪問街口。再物理disk是異步設備情況下，它提供了disk上的同步接口。
+(1)	SynchDisk:: SynchDisk()
+負責初始化，包括創建一個Semaphore和一個lock，然後實例化Disk。
+Semaphore用於同步Disk訪問，他的初始化值為0，表示一開始沒有完成Disl操作。lock用於確保對disk的互斥訪問(不會同時)，在Disk操作期間會鎖住，避免其他thread對Disk進行操作。
+(2)	SynchDisk::~ SynchDisk()
+釋放Semaphore、lock和disk所占用的memory。
+(3)	SynchDisk::ReadSector()
+同步化訪問的一個方法，用於從disk中讀取data block的內容。目的是提供一個同步接口，確保在讀取disk的data時，只有一個thread可以進行相應的操作，防止併發訪問問題(應該就是同時操作會發生的問題)。
+(4)	SynchDisk::WriteSector()
+同步化訪問的一個方法，用於將buffer中的內容寫入disk的指定sector。目的是提供一個同步接口，確保在寫入disk的data時，只有一個thread可以進行相應的操作，防止併發訪問問題(應該就是同時操作會發生的問題)。
+(5)	SynchDisk::CallBack()
+是disk中的interrupt處理程序，在完成讀取或寫入請求時會用它來回掉function。作用是用於同步，在disk I/O操作完成後，等待thread能夠接盪通知，繼續行後續的操作。
+
+6.	bitmap.cc
+用於管理bitmap的實用程序，bitmap是由一組bit組成的數組，每個bit可以是on或off。他允許創建、銷毀、設置、清除、測試、查找和打因bitmap。bitmap通常用於跟蹤資源的分配狀態，其中每個bit代表一個資源的狀態，可以是"已分配"或"未分配"。
+(1)	Bitmap:: Bitmap()
+初始化一個具有指定bit數(至少包含一位)的bitmap。他會將每一個bit初始為0，表示未分配。
+(2)	Bitmap::~ Bitmap()
+用於釋放bitmap的memory空間。
+(3)	Bitmap::Mark()
+用於將bitmap中的第n個bit設為1(會確保它有在有效位置中)。
+(4)	Bitmap::Clear()
+用於將bitmap中的第n個bit設為0(會確保它有在有效位置中)。
+(5)	Bitmap::Test()
+用於檢測bitmap中的第n個bit是0還是1。會確保該bit是否在範圍內，如果該bit為1則返回TRUE，若為0則返回FLASE。
+(6)	Bitmap::FindAndSet()
+負責找尋bitmap中第一個為0的bit，也就是第一個未被使用的bit。
+它會用for遍歷bitmap中的每個bit，並呼叫Test檢查它是否為0，如果是則呼叫Mark將它設置為1，表示它已被使用，定返回該bit的位置，若沒有找到未被設置的bit，則表示每個bit都已經被使用了，返回-1表示沒有可以使用的bit。
+(7)	Bitmap::NumClear()
+用於返回bitmap中未被使用/分配的數量。
+它會初始化一個計數器為0，用for遍歷bitmap中的每一bit，如果發現一bit未被分配，則count++，for結束後返回count的值。
+(8)	Bitmap::Print()
+用於打印bitmap中的內容。
+用for迴圈遍歷bitmap中的每一bit，若發現一bit已被分配，則返回該bit的number。
+(9)	Bitmap::SelfTest()
+用於測試bitmap是否正常工作。
+檢查bitmap是否夠大，檢查所有bit是否皆未設置，呼叫FindAndSet數至第一個未設置的bit，檢查第0和第31 bit是否已經被設置，並在呼叫FindAndSet數至第二個未設置的bit，用Clear清除第0位和第1位，用for設置每一位，測試FindAndSet返回的值是否為-1(表示bitmap已滿)，最後用for迴圈清除每一個bit。
+
+7.	disk.cc
+實現了模擬物理disk設備的功能。
+其中MagicNumber定義了disk中file的MagicNumber，MagicSize定義了它的大小，DiskSize定義了整個Disk的大小，NumSector是disk的sector數，SectorSize則是指sector的大小。
+(1)	Disk:: Disk()
+用於初始化模擬Disk。會初始化一些disk相關的值。
+(2)	Disk::~ Disk()
+會釋放Disk所使用的file。
+(3)	Disk::PrintSector()
+目的是打印disk讀/寫請求的data內容，有助於在調試期間了解disk讀/寫請求的實際內容。
+(4)	Disk::ReadRequest()
+用於模擬讀取sector的請求。
+計算讀取操作的延遲時間(tisk)，定位disk中對應sector的位置，將該sector的data給buffer，並標記sector的活動狀態為true。
+(5)	Disk::WriteRequest()
+用於模擬寫入sector的請求。
+計算讀取操作的延遲時間(tisk)，定位disk中對應sector的位置，將給定的data寫入sector，並標記sector的活動狀態為true。
+(6)	Disk::CallBack()
+模擬機器收到sector中斷調用(interrupt)的CallBack函數。
+將sector的活動狀態標記為FLASE，表示操作已完成，然後通知sector操作完成。
+(7)	Disk::TimeToSeek()
+計算header到達正確Seek的時間，還會返回直到下一個sector邊界的時間。
+(8)	Disk::ModuloDiff()
+通過考慮Seek循環性，計算目標Sector和當前sector之間旋轉延遲的sector數。
+會返回 "(toOffset - fromOffset + SectorsPerTrack) % SectorsPerTrack" 。
+(9)	Disk::ComputeLatency()
+用於計算從當前位置讀取／寫入sector所需的時間。會返回總請求延遲時間，包括尋道(Seek)時間、旋轉延遲和傳輸時間。
+(10)Disk::UpdateLast()
+用於更新最近請求的sector，以便了解seek中buffer的內容。

@@ -48,10 +48,11 @@
 // The track buffer simulation can be disabled by compiling with -DNOTRACKBUF
 
 // MP4 Hint: DO NOT change the SectorSize, but other constants are allowed
-const int SectorSize = 128;		// number of bytes per disk sector
+const int SectorSize = 128;		// number of bytes per disk sector [不能改!!]
 const int SectorsPerTrack  = 32;	// number of sectors per disk track 
 const int NumTracks = 32;		// number of tracks per disk
 const int NumSectors = (SectorsPerTrack * NumTracks); // total # of sectors per disk
+//NumSectors=32*32=1024
 
 class Disk : public CallBackObj {
   public:
