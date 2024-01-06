@@ -168,7 +168,7 @@ FileSystem::FileSystem(bool format)
         freeMapFile = new OpenFile(FreeMapSector);
         directoryFile = new OpenFile(DirectorySector);
     }
-    openedFileId = -1;   // set to -1 when init (just dummy number)
+    openedFileId = 0;   // set to 0 when init (just dummy number)
     //-1 means no file opened
 }
 
@@ -211,13 +211,13 @@ FileSystem::~FileSystem()
 //	"initialSize" -- size of file to be created
 //----------------------------------------------------------------------
 
-int FileSystem::Create(char *name, int initialSize)
+bool FileSystem::Create(char *name, int initialSize)
 {
     Directory *directory;
     PersistentBitmap *freeMap;
     FileHeader *hdr;
     int sector;
-    int success;
+    bool success;
 
     DEBUG(dbgFile, "Creating file " << name << " size " << initialSize);
 
@@ -239,17 +239,17 @@ int FileSystem::Create(char *name, int initialSize)
         // cuz need to know latest status of sector
         // and find a free sector to hold the file header of new file
         if (sector == -1)
-            success = 0; // no free block for file header
+            success = FALSE; // no free block for file header
         else if (!directory->Add(name, sector))
-            success = 0; // no space in directory
+            success = FALSE; // no space in directory
         else
         {
             hdr = new FileHeader;
             if (!hdr->Allocate(freeMap, initialSize))
-                success = 0; // no space on disk for data
+                success = FALSE; // no space on disk for data
             else
             {
-                success = 1;
+                success = TRUE;
                 // everthing worked, flush all changes back to disk
                 hdr->WriteBack(sector);
                 directory->WriteBack(directoryFile);
@@ -273,7 +273,7 @@ int FileSystem::Create(char *name, int initialSize)
 //	"name" -- the text name of the file to be opened
 //----------------------------------------------------------------------
 
-OpenFileId FileSystem::Open(char *name)
+OpenFile * FileSystem::Open(char *name)
 {
     Directory *directory = new Directory(NumDirEntries);
     OpenFile *openFile = NULL;
@@ -296,7 +296,7 @@ OpenFileId FileSystem::Open(char *name)
     }
     
     delete directory;
-    return openedFileId; // return NULL if not found
+    return openedFile; // return NULL if not found
 }
 
 
@@ -304,46 +304,8 @@ OpenFileId FileSystem::Open(char *name)
 // ------ below add by me for MP4 --------
 
 
-int FileSystem::Read(char *buf, int size, OpenFileId id){   //return numbyte read, -1 means failed
-    if( id != openedFileId){
-        DEBUG(dbgFile, "given id not same as recorded file id, but still try to open file");
-    }
-    OpenFile* fileToRead = openedFile;
-    if (fileToRead == NULL){
-        DEBUG(dbgFile, "openedFile is NULL, read failed");
-        return -1;
-    }
-    int numRead = -1;
-    numRead = fileToRead->Read(buf, size);
-    if (numRead <0) return -1;
-    
-    return numRead;     //return num byte read
-
-}
-int FileSystem::Write(char *buf, int size, OpenFileId id){
-    // retuen num byte written
-    // -1 means failed
-    if( id != openedFileId){
-        DEBUG(dbgFile, "given id not same as recorded file id, but still try to write file");
-    }
-    OpenFile* fileToWrite = openedFile;
-    if(fileToWrite == NULL){
-        DEBUG(dbgFile, "openedFile is NULL, write failed");
-        return -1;
-    }
-    int numWritten = -1;
-    numWritten = fileToWrite->Write(buf, size);
-    if(numWritten <0) return -1;
-    return numWritten;
 
 
-}
-int FileSystem::Close(OpenFileId id){
-
-    delete openedFile;
-    openedFileId = -1;
-
-}
 //----------------------------------------------------------------------
 // FileSystem::Remove
 // 	Delete a file from the file system.  This requires:

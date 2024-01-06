@@ -25,7 +25,8 @@ int SysAdd(int op1, int op2)
 	return op1 + op2;
 }
 
-#ifdef FILESYS_STUB
+#ifdef FILESYS_STUB	
+// ifdef FILESYS_STUB - >means use UNIX FS (nachos itself no real FS)
 int SysCreate(char *filename)
 {
 	// return value
@@ -34,5 +35,6 @@ int SysCreate(char *filename)
 	return kernel->interrupt->CreateFile(filename);
 }
 #endif
+
 
 #endif /* ! __USERPROG_KSYSCALL_H__ */

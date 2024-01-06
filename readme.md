@@ -95,7 +95,7 @@ filesys.cc
 
 看FileSystem::FileSystem(bool format)
 
-### (2)
+### (2) What is the maximum disk size
 
 看disk.h
 
@@ -115,12 +115,13 @@ ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
 ### (4)
 
 - inode 應該就是 file header
-- file header 應該要有:
+- file header 有:
   - file's current size (類似allocate了的之中有多少是真的有用到的) (其他可能只是垃圾資訊(未初始化/之前沒flush到的))
   - allocate (分配)給file的sector數量
   - array of sector numbers (告知file的data block貯存在哪些sector)
   - (pointer to physical disk block?) (不確定)
-
+  - 
+![Alt text](nachos_file_hdr_diagram(before-modified).jpg)
 
 ### (5)
 3KB

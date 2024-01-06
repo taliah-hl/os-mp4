@@ -124,63 +124,7 @@ void ExceptionHandler(ExceptionType which)
 			cout << "return value:" << val << endl;
 			kernel->currentThread->Finish();
 			break;
-		case SC_Create:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *filename = &(kernel->machine->mainMemory[val]);
-			// 	status = SysCreate(filename);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// } 
-			// not yet verified
-			
-			break;
-		case SC_Remove:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *filename = &(kernel->machine->mainMemory[val]);
-			// 	status = SysRemove(filename);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
-			// not yet verified
-			break;
-		case SC_Open:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *filename = &(kernel->machine->mainMemory[val]);
-			// 	status = SysOpen(filename);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
-			// not yet verified
-			break;
-		case SC_Read:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *buffer = &(kernel->machine->mainMemory[val]);
-			// 	int size = kernel->machine->ReadRegister(5);
-			// 	status = SysRead(buffer, size);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
-			// not yet verified
-			break;
-		case SC_Write:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *buffer = &(kernel->machine->mainMemory[val]);
-			// 	int size = kernel->machine->ReadRegister(5);
-			// 	status = SysWrite(buffer, size);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
-			// not yet verified
-			break;
-		case SC_Close:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	int fd = kernel->machine->ReadRegister(4);
-			// 	status = SysClose(fd);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
-			// not yet verified
-			break;
+		
 			
 		default:
 			cerr << "Unexpected system call " << type << "\n";
