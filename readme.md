@@ -120,7 +120,7 @@ ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
   - allocate (分配)給file的sector數量
   - array of sector numbers (告知file的data block貯存在哪些sector)
   - (pointer to physical disk block?) (不確定)
-
+![Alt text](nachos_file_hdr_diagram(before-modified).jpg)
 
 ### (5)
 3KB
