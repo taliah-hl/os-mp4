@@ -86,9 +86,9 @@ private:
 								// block in the file
 	// pointer to sector which hold the data block
 	// 最多 `NumDirect` 格, 實際使用`numSectors` 格
+	//NumDirect = 30
 
-	// dataSectors
-	// 類似幫你找你想要的資料在哪個sector number (需再了解)
+
 };
 
 #endif // FILEHDR_H
