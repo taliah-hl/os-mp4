@@ -122,6 +122,7 @@ ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
   - (pointer to physical disk block?) (不確定)
 ![Alt text](nachos_file_hdr_diagram(before-modified).jpg)
 
+- allocation scheme: index allocation
 ### (5)
 3KB
 
