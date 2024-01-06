@@ -302,7 +302,46 @@ OpenFile * FileSystem::Open(char *name)
 
 /// ---------------
 // ------ below add by me for MP4 --------
+int FileSystem::Read(char *buf, int size, OpenFileId id){   //return numbyte read, -1 means failed
+    if( id != openedFileId){
+        DEBUG(dbgFile, "given id not same as recorded file id, but still try to open file");
+    }
+    OpenFile* fileToRead = openedFile;
+    if (fileToRead == NULL){
+        DEBUG(dbgFile, "openedFile is NULL, read failed");
+        return -1;
+    }
+    int numRead = -1;
+    numRead = fileToRead->Read(buf, size);
+    if (numRead <0) return -1;
+    
+    return numRead;     //return num byte read
 
+}
+int FileSystem::Write(char *buf, int size, OpenFileId id){
+    // retuen num byte written
+    // -1 means failed
+    if( id != openedFileId){
+        DEBUG(dbgFile, "given id not same as recorded file id, but still try to write file");
+    }
+    OpenFile* fileToWrite = openedFile;
+    if(fileToWrite == NULL){
+        DEBUG(dbgFile, "openedFile is NULL, write failed");
+        return -1;
+    }
+    int numWritten = -1;
+    numWritten = fileToWrite->Write(buf, size);
+    if(numWritten <0) return -1;
+    return numWritten;
+
+
+}
+int FileSystem::Close(OpenFileId id){
+
+    delete openedFile;
+    openedFileId = -1;
+
+}
 
 
 

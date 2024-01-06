@@ -92,6 +92,24 @@ public:
 	// Create a file (UNIX creat)
 
 	OpenFile * Open(char *name); // Open a file (UNIX open)
+	OpenFile *GetOpenedFile(){		// there will be only 1 file opened
+		return openedFile;
+	}
+
+	OpenFileId GetOpenedFileId(){			// return the id of the only 1 file opened
+		return openedFileId;
+	}
+
+	bool Remove(char *name); // Delete a file (UNIX unlink)
+	int Read(char *buf, int size, OpenFileId id);	  
+	//return numbyte read, -1 means failed
+
+	int Write(char *buf, int size, OpenFileId id);
+	//return numbyte written, -1 means failed
+
+
+	int Close(OpenFileId id);
+	// delete openedFile & set back openedFileId to -1
 
 
 
