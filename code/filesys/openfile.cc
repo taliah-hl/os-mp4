@@ -115,14 +115,17 @@ int OpenFile::Write(char *into, int numBytes)    // return num byte written
 int OpenFile::ReadAt(char *into, int numBytes, int position)
 // return: numBytes read
 {
-    int fileLength = hdr->FileLength();
+    int fileLength = hdr->FileLength(); 
+    // fileheader::filelength() has already changed to fit new file header structure
+
+    // below part also no need to change because Fileheader::ByteToSector already changed to fit new file header structure
     int i, firstSector, lastSector, numSectors;
     char *buf;
 
     if ((numBytes <= 0) || (position >= fileLength))
-        return 0; // check request
-    if ((position + numBytes) > fileLength)
-        numBytes = fileLength - position;
+    	return 0; 				// check request
+    if ((position + numBytes) > fileLength)		
+	numBytes = fileLength - position;
     DEBUG(dbgFile, "Reading " << numBytes << " bytes at " << position << " from file of length " << fileLength);
 
     firstSector = divRoundDown(position, SectorSize);
@@ -131,13 +134,13 @@ int OpenFile::ReadAt(char *into, int numBytes, int position)
 
     // read in all the full and partial sectors that we need
     buf = new char[numSectors * SectorSize];
-    for (i = firstSector; i <= lastSector; i++)
-        kernel->synchDisk->ReadSector(hdr->ByteToSector(i * SectorSize),
-                                      &buf[(i - firstSector) * SectorSize]);
+    for (i = firstSector; i <= lastSector; i++)	
+        kernel->synchDisk->ReadSector(hdr->ByteToSector(i * SectorSize), 
+					&buf[(i - firstSector) * SectorSize]);
 
     // copy the part we want
     bcopy(&buf[position - (firstSector * SectorSize)], into, numBytes);
-    delete[] buf;
+    delete [] buf;
     return numBytes;
 }
 

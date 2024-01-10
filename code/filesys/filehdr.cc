@@ -217,10 +217,17 @@ int FileHeader::ByteToSector(int offset)
 // 	Return the number of bytes in the file.
 //----------------------------------------------------------------------
 
-int FileHeader::FileLength()	// Return the length of the [this] layer
+int FileHeader::FileLength()	// Return the length of total file
 {
+	
+	if(nextFileHdr != NULL){
+		int len = numBytes + nextFileHdr->FileLength();
+		return len;
+	}
 	return numBytes;
+	
 }
+
 
 //----------------------------------------------------------------------
 // FileHeader::Print

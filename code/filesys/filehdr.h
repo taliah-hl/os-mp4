@@ -58,8 +58,14 @@ public:
 								  // to the disk sector containing
 								  // the byte
 
-	int FileLength(); // Return the length of the this layer
-					  // in bytes
+	int FileLength(); 
+	// recursively 算這個file header底下所有layer的file長度
+	// 在第一層被call = 算整個file長度
+	// Return the length of below layers file// in bytes
+	
+
+
+					  
 
 	void Print(); // Print the contents of the file.
 
