@@ -103,12 +103,9 @@ private:
 	
 	int nextFileHdrSector;    // sector number of the next file header (means addr of next header)
 	// -1 = this is last  file header
-	int lastOccupiedIdx;   // last occupied index in dataSectors 
 	// -1 = no occupied
 	// if lastOccupiedIdx== NumDirect -1 means full -> need to use next sector
 
-	int AllocateThisLayer(PersistentBitmap *freeMap, int layerSize);
-	//return: addr of this layer file header
 
 
 };
