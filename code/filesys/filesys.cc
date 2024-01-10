@@ -211,6 +211,13 @@ FileSystem::~FileSystem()
 //	"initialSize" -- size of file to be created
 //----------------------------------------------------------------------
 
+
+int FileSystem::CreateAFile(char * name, int initialSize){
+    bool res = Create(name, initialSize);
+    if(res) return 1;
+    else return -1;
+
+}
 bool FileSystem::Create(char *name, int initialSize)
 {
     Directory *directory;
@@ -297,6 +304,11 @@ OpenFile * FileSystem::Open(char *name)
     
     delete directory;
     return openedFile; // return NULL if not found
+}
+
+OpenFileId FileSystem::OpenAFile(char *name){
+    Open(name);
+    return openedFileId;
 }
 
 

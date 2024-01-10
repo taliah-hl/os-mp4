@@ -88,10 +88,18 @@ public:
 	// MP4 mod tag
 	~FileSystem();
 
+	int CreateAFile(char * name, int initialSize);
+	// success return 1, fail resturn -1
+
+	
 	bool Create(char *name, int initialSize);
 	// Create a file (UNIX creat)
 
 	OpenFile * Open(char *name); // Open a file (UNIX open)
+
+	OpenFileId OpenAFile(char *name); // add by me
+
+	
 	OpenFile *GetOpenedFile(){		// there will be only 1 file opened
 		return openedFile;
 	}

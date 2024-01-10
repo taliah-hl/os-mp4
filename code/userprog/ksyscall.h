@@ -34,6 +34,37 @@ int SysCreate(char *filename)
 	// 0: failed
 	return kernel->interrupt->CreateFile(filename);
 }
+#else
+
+// case for real nachos  (MP4)
+// below added in MP4
+// system calls
+int SysCreate(char *filename, int size)
+{
+	return kernel->fileSystem->CreateAFile(filename, size);
+}
+
+OpenFileId SysOpen(char *name)
+{
+  return kernel->fileSystem->OpenAFile(name);
+}
+
+int SysWrite(char *buffer, int size, OpenFileId id)
+{
+  return kernel->fileSystem->Write(buffer, size, id);
+}
+
+int SysRead(char *buffer, int size, OpenFileId id)
+{
+  return kernel->fileSystem->Read(buffer, size, id);
+}
+
+int SysClose(OpenFileId id)
+{
+  return kernel->fileSystem->Close(id);
+}
+
+
 #endif
 
 

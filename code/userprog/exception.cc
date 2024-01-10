@@ -125,13 +125,19 @@ void ExceptionHandler(ExceptionType which)
 			kernel->currentThread->Finish();
 			break;
 		case SC_Create:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *filename = &(kernel->machine->mainMemory[val]);
-			// 	status = SysCreate(filename);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// } 
+			val = kernel->machine->ReadRegister(4);
+			{
+				char *filename = &(kernel->machine->mainMemory[val]);
+			 	int initialSize = kernel->machine->ReadRegister(5);
+				status = SysCreate(filename);
+				kernel->machine->WriteRegister(2, (int)status);
+			} 
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+        	kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg)+4);
+        	kernel->machine->WriteRegister(NextPCReg ,kernel->machine->ReadRegister(PCReg)+4);
+        	return;
 			// not yet verified
+			ASSERTNOTREACHED();
 			
 			break;
 		case SC_Remove:
@@ -144,41 +150,60 @@ void ExceptionHandler(ExceptionType which)
 			// not yet verified
 			break;
 		case SC_Open:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *filename = &(kernel->machine->mainMemory[val]);
-			// 	status = SysOpen(filename);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
+			val = kernel->machine->ReadRegister(4);
+			{
+				char *filename = &(kernel->machine->mainMemory[val]);
+				status = SysOpen(filename);
+				kernel->machine->WriteRegister(2, (int)status);
+			}
 			// not yet verified
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+        	kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg)+4);
+        	kernel->machine->WriteRegister(NextPCReg ,kernel->machine->ReadRegister(PCReg)+4);
+        	return;
+        	ASSERTNOTREACHED();
 			break;
 		case SC_Read:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *buffer = &(kernel->machine->mainMemory[val]);
-			// 	int size = kernel->machine->ReadRegister(5);
-			// 	status = SysRead(buffer, size);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
+			val = kernel->machine->ReadRegister(4);
+			{
+				char *buffer = &(kernel->machine->mainMemory[val]);
+				int size = kernel->machine->ReadRegister(5);
+				int id = kernel->machine->ReadRegister(6); //dummy
+				status = SysRead(buffer, size, id);
+				
+				kernel->machine->WriteRegister(2, (int)status);
+			}
 			// not yet verified
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg)+4);
+			kernel->machine->WriteRegister(NextPCReg ,kernel->machine->ReadRegister(PCReg)+4);
+			return;
+			ASSERTNOTREACHED();
 			break;
+
 		case SC_Write:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	char *buffer = &(kernel->machine->mainMemory[val]);
-			// 	int size = kernel->machine->ReadRegister(5);
-			// 	status = SysWrite(buffer, size);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
-			// not yet verified
+			val = kernel->machine->ReadRegister(4);
+			{
+				char *buffer = &(kernel->machine->mainMemory[val]);
+				int size = kernel->machine->ReadRegister(5);
+			int id = kernel->machine->ReadRegister(6);
+				status = SysWrite(buffer, size);
+				kernel->machine->WriteRegister(2, (int)status);
+			}
+			//not yet verified
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg)+4);
+			kernel->machine->WriteRegister(NextPCReg ,kernel->machine->ReadRegister(PCReg)+4);
+			return;
+			ASSERTNOTREACHED();
 			break;
 		case SC_Close:
-			// val = kernel->machine->ReadRegister(4);
-			// {
-			// 	int fd = kernel->machine->ReadRegister(4);
-			// 	status = SysClose(fd);
-			// 	kernel->machine->WriteRegister(2, (int)status);
-			// }
+			val = kernel->machine->ReadRegister(4);
+			{
+				int fd = kernel->machine->ReadRegister(4);
+				status = SysClose(fd);
+				kernel->machine->WriteRegister(2, (int)status);
+			}
 			// not yet verified
 			break;
 			

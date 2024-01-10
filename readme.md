@@ -120,8 +120,17 @@ ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
   - allocate (分配)給file的sector數量
   - array of sector numbers (告知file的data block貯存在哪些sector)
   - (pointer to physical disk block?) (不確定)
-  - 
 ![Alt text](nachos_file_hdr_diagram(before-modified).jpg)
+
+- allocation scheme: indexed allocation
+
+file size 限制
+
+-   => file header 最多指向`NumDirect` 這麼多個sector
+-  `NumDirect` = 30
+-  ==> 一個file最多只能有30個sector
+-  每sector = 128 Bytes
+-  ==> 每個file = 30 * 128 Bytes = 3840 Bytes => 3840/1024 = 3.75KB
 
 ### (5)
 3KB
