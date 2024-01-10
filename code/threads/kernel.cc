@@ -302,38 +302,5 @@ int Kernel::Exec(char* name)
 	threadNum++;
 
 	return threadNum-1;
-/*
-    cout << "Total threads number is " << execfileNum << endl;
-    for (int n=1;n<=execfileNum;n++) {
-		t[n] = new Thread(execfile[n]);
-		t[n]->space = new AddrSpace();
-		t[n]->Fork((VoidFunctionPtr) &ForkExecute, (void *)t[n]);
-		cout << "Thread " << execfile[n] << " is executing." << endl;
-	}
-	cout << "debug Kernel::Run finished.\n";	
-*/
-//  Thread *t1 = new Thread(execfile[1]);
-//  Thread *t1 = new Thread("../test/test1");
-//  Thread *t2 = new Thread("../test/test2");
-
-//    AddrSpace *halt = new AddrSpace();
-//  t1->space = new AddrSpace();
-//  t2->space = new AddrSpace();
-
-//    halt->Execute("../test/halt");
-//  t1->Fork((VoidFunctionPtr) &ForkExecute, (void *)t1);
-//  t2->Fork((VoidFunctionPtr) &ForkExecute, (void *)t2);
-
-//	currentThread->Finish();
-//    Kernel::Run();
-//  cout << "after ThreadedKernel:Run();" << endl;  // unreachable
 }
 
-#ifdef FILESYS_STUB
-int Kernel::CreateFile(char *filename)
-{
-	return fileSystem->Create(filename);
-}
-#endif
-
-// real nachos FS below ???

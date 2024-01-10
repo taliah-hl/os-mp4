@@ -1,13 +1,9 @@
-// filehdr.h
-//	Data structures for managing a disk file header.
+// filehdr.h 
+//	Data structures for **managing a disk file header**.  
 //
-//	A file header describes where on disk to find the data in a file,
-//	along with other information about the file (for instance, its
+//	**A file header describes where on disk to find the data in a file**,
+//	along with **other information about the file** (for instance, its
 //	length, owner, etc.)
-//
-// Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation
-// of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
 
@@ -17,100 +13,78 @@
 #include "disk.h"
 #include "pbitmap.h"
 
-#define NumDirect ((SectorSize - 2 * sizeof(int)) / sizeof(int))
-// sector size = 128
-// = 128 - (2 * 4) / 4 = 30
-#define MaxFileSize (NumDirect * SectorSize)
+#define NumDirect 	((SectorSize - 3 * sizeof(int)) / sizeof(int))  // ­ì¥»¬O -2 ¡A§ï¦¨-3 ¦h¦s¤@­Ó«ü¼Ð
+#define MaxFileSize 	(NumDirect * SectorSize)
 
-// The following class defines the Nachos "file header" (in UNIX terms,
-// the "i-node"), describing where on disk to find all of the data in the file.
-// The file header is organized as a simple table of pointers to
-// data blocks.
+// The following class defines the Nachos "file header" (in UNIX terms, the **"i-node"**), 
+// describing where on disk to find all of the data in the file.
+// The file header is organized as a simple **table of pointers to data blocks**. 
 //
-// The file header data structure can be stored in memory or on disk.
+// The **file header data structure can be stored in memory or on disk**.
 // When it is on disk, it is stored in a single sector -- this means
-// that we assume the size of this data structure to be the same
-// as one disk sector.  Without indirect addressing, this
-// limits the maximum file length to just under 4K bytes.
+// that **we assume the size of this data structure to be the same
+// as one disk sector**.  **Without indirect addressing, this
+// limits the maximum file length to just under 4K bytes**.
 //
-// There is no constructor; rather the file header can be initialized
-// by allocating blocks for the file (if it is a new file), or by
-// reading it from disk.
+// **There is **no constructor**; rather the file header can be initialized
+// by allocating blocks for the file** (if it is a new file), 
+// **or by reading it from disk**.
 
-class FileHeader
-{
-public:
-	// MP4 mod tag
-	FileHeader(); // dummy constructor to keep valgrind happy
-	~FileHeader();
+class FileHeader {
+  public:
+	  // MP4 mod tag
+	  FileHeader(); // dummy constructor
+	  ~FileHeader();
+     
+	  // Initialize a file header, including **allocating space on disk for the file data**
+    bool Allocate(PersistentBitmap *bitMap, int fileSize);
+    
+    // De-allocate this file's data blocks
+    void Deallocate(PersistentBitmap *bitMap);
 
-	bool Allocate(PersistentBitmap *bitMap, int fileSize); // Initialize a file header,
-														   //  including allocating space
-														   //  on disk for the file data
-	void Deallocate(PersistentBitmap *bitMap);			   // De-allocate this file's
-														   //  data blocks
+    // Initialize file header **from disk**
+    void FetchFrom(int sectorNumber); 
+   	
+    // Write modifications to file header back **to disk**
+    void WriteBack(int sectorNumber);
 
-	void FetchFrom(int sectorNumber); // Initialize file header from disk
-	void WriteBack(int sectorNumber); // Write modifications to file header
-									  //  back to disk
+    // Convert a byte offset into the file to the disk sector containing the byte
+    int ByteToSector(int offset);
+    
+    // Return the length of the file in bytes
+    int FileLength();			
 
-	int ByteToSector(int offset); // Convert a byte offset into the file
-								  // to the disk sector containing
-								  // the byte
-
-	int FileLength(); 
-	// recursively ç®—é€™å€‹file headeråº•ä¸‹æ‰€æœ‰layerçš„fileé•·åº¦
-	// åœ¨ç¬¬ä¸€å±¤è¢«call = ç®—æ•´å€‹fileé•·åº¦
-	// Return the length of below layers file// in bytes
-	
-
-
-					  
-
-	void Print(); // Print the contents of the file.
-
-private:
+    // Print the contents of the file.
+    void Print();
+    
+    // J: MP4·s¼W¥\¯à¡A¬°¤F¨ú±o¤U¤@­ÓLinkªº«ü¼Ð
+    FileHeader* getNextFileHeader() { return nextFileHeader;}
+    int HeaderLength(); // ·s¼W¡A¦^¶ÇHeadr¦³´X®æ
+    // ******************************************
+  private:
 	/*
 		MP4 hint:
 		You will need a data structure to store more information in a header.
 		Fields in a class can be separated into disk part and in-core part.
-		Disk part are data that will be written into disk.
-		In-core part are data only lies in memory, and are used to maintain the data structure of this class.
-		In order to implement a data structure, you will need to add some "in-core" data
-		to maintain data structure.
+  		**Disk part are data that will be written into disk**.
+	  	**In-core part are data only lies in memory, and are used to maintain the data structure of this class**.
 		
-		Disk Part - numBytes, numSectors, dataSectors occupy exactly 128 bytes and will be
-		written to a sector on disk.
+    In order to implement a data structure, **you will need to add some "in-core" data
+		to maintain data structure**.
+		
+		**Disk Part - numBytes, numSectors, dataSectors occupy exactly 128 bytes and will be
+		written to a sector on disk**.
 		In-core part - none
-		
 	*/
-
-	int numBytes;				// Number of bytes in the file (this layer)
-	// num byte of this file on [this] layer
-	
-	int numSectors;				// Number of data sectors in the file
-	// é€™file ç¸½å…±ç”¨äº†å¹¾å€‹sector
-	int dataSectors[NumDirect]; // Disk sector numbers for each data
-	// arr of int (sector num)	// block in the file
-
-	//æœªåŠ å¤§headerå‰:
-	// æœ€å¤š `NumDirect` æ ¼, å¯¦éš›ä½¿ç”¨`numSectors` æ ¼
-	//NumDirect = 30
-
-	// added in MP4
-	FileHeader* nextFileHdr;  // pointer to the next file header, NULL note this is last file header
-	// maybe dont need this
-	
-	int nextFileHdrSector;    // sector number of the next file header (means addr of next header)
-	// -1 = this is last  file header
-	int lastOccupiedIdx;   // last occupied index in dataSectors 
-	// -1 = no occupied
-	// if lastOccupiedIdx== NumDirect -1 means full -> need to use next sector
-
-	int AllocateThisLayer(PersistentBitmap *freeMap, int layerSize);
-	//return: addr of this layer file header
-
-
+    // J: MP4·s¼W *******************************
+    FileHeader* nextFileHeader;  // (in-core) ³o­Ó­n¥Ã»·©ñ¦b²Ä¤@®æ!!!!!!
+    // ******************************************
+    int numBytes;		  	         // Number of bytes in the file
+    int numSectors;			         // Number of data sectors in the file
+    int dataSectors[NumDirect];  // Disk sector numbers for each data block in the file
+    // J: MP4·s¼W *******************************
+    int nextFileHeaderSector;    // (in-disk) 
+    // ******************************************
 };
 
 #endif // FILEHDR_H

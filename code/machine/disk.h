@@ -9,10 +9,6 @@
 //	system shuts down, the file system may be corrupted.
 //
 //  DO NOT CHANGE -- part of the machine emulation
-//
-// Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
-// of liability and disclaimer of warranty provisions.
 
 #ifndef DISK_H
 #define DISK_H
@@ -47,13 +43,14 @@
 //
 // The track buffer simulation can be disabled by compiling with -DNOTRACKBUF
 
-// MP4 Hint: DO NOT change the SectorSize, but other constants are allowed
-const int SectorSize = 128;		// number of bytes per disk sector [‰∏çËÉΩÊîπ!!]
-const int SectorsPerTrack  = 32;	// number of sectors per disk track 
-const int NumTracks = 32*512;		// number of tracks per disk
-//originally is 32
-const int NumSectors = (SectorsPerTrack * NumTracks); // total # of sectors per disk
-//NumSectors=32*32=1024
+const int SectorSize = 128;		// number of bytes per disk sector
+const int SectorsPerTrack  = 32;	// number of sectors per disk track
+
+// J: ™Ω±µ¶h≠º≠”512±¯°ADisk¥N≈‹´‹§j§F= =...
+const int NumTracks = 32 * 512;		// number of tracks per disk
+// end...
+const int NumSectors = (SectorsPerTrack * NumTracks);
+					// total # of sectors per disk
 
 class Disk : public CallBackObj {
   public:

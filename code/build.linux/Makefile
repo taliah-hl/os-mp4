@@ -192,7 +192,7 @@
 # and eventually will not require the symbol definition
 ################################################################
 DEFINES =  -DRDATA -DSIM_FIX
-# DEFINES =  -DFILESYS_STUB -DRDATA -DSIM_FIX
+#DEFINES =  -DFILESYS_STUB -DRDATA -DSIM_FIX
 
 
 #####################################################################
