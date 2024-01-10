@@ -41,6 +41,9 @@ FileHeader::FileHeader()
 	numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
+	lastOccupiedIdx = -1;
+	nextFileHdrSector = -1;
+	nextFileHdr=NULL;
 }
 
 //----------------------------------------------------------------------
@@ -53,6 +56,8 @@ FileHeader::FileHeader()
 FileHeader::~FileHeader()
 {
 	// nothing to do now
+	if (nextFileHdr != NULL)
+		delete nextFileHdr;
 }
 
 //----------------------------------------------------------------------
@@ -68,10 +73,15 @@ FileHeader::~FileHeader()
 
 bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return true = have space; false= no enough space
 {
-	//looks like this method is only for allocating the "ONLY ONE" persistentBitmap for the disk (??)
 	
-	numBytes = fileSize;
-	numSectors = divRoundUp(fileSize, SectorSize);
+	// return: success or not
+	
+	//bool success = FALSE;
+	numBytes = fileSize < MaxFileSize? fileSize:MaxFileSize;
+	// calculate numbyte of this layer
+	int notAllocatedBytes = fileSize - numBytes;	// 這層layer不夠位裝的byte數
+
+	numSectors = divRoundUp(numBytes, SectorSize);
 	if (freeMap->NumClear() < numSectors)
 		return FALSE; // not enough space
 
@@ -88,6 +98,23 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return tr
 		// we expect this to succeed
 		ASSERT(dataSectors[i] >= 0);
 	}
+	if(notAllocatedBytes > 0){
+		// allocate next layer
+		nextFileHdrSector = freeMap->FindAndSet();
+		if (nextFileHdrSector < 0){
+			DEBUG(dbgMp4, "in FileHeader::Allocate: no enough space for next layer");
+			return FALSE;
+		}
+			
+		nextFileHdr = new FileHeader();
+		
+		ASSERT(nextFileHdrSector >= 0);
+		// allocate next layer
+		return nextFileHdr->Allocate(freeMap, notAllocatedBytes);	
+		// return success or not from next layer 
+	}
+	
+
 	return TRUE;
 }
 
@@ -104,6 +131,13 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
 	{
 		ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
 		freeMap->Clear((int)dataSectors[i]);
+	}
+	if (nextFileHdr != NULL)
+	{
+		nextFileHdr->Deallocate(freeMap);	// clear things in next header
+		delete nextFileHdr;		// delete the next header itself
+		nextFileHdr = NULL;		// set to NULL to acoid dangling pointer
+		nextFileHdrSector = -1;
 	}
 }
 
@@ -122,6 +156,12 @@ void FileHeader::FetchFrom(int sector)
 		MP4 Hint:
 		After you add some in-core informations, you will need to rebuild the header's structure
 	*/
+	if(nextFileHdrSector != -1){	// this is necceaary becaause next filehdr may not have been loaded to memory
+		nextFileHdr = new FileHeader();
+		nextFileHdr->FetchFrom(nextFileHdrSector)
+	}
+	
+		
 }
 
 //----------------------------------------------------------------------
@@ -143,6 +183,10 @@ void FileHeader::WriteBack(int sector)
 		memcpy(buf + offset, &dataToBeWritten, sizeof(dataToBeWritten));
 		...
 	*/
+
+	if(nextFileHdr != NULL){
+		nextFileHdr->WriteBack(nextFileHdrSector);
+	}
 }
 
 //----------------------------------------------------------------------
@@ -157,6 +201,14 @@ void FileHeader::WriteBack(int sector)
 
 int FileHeader::ByteToSector(int offset)
 {
+	
+	if((offset / SectorSize) >= NumDirect){
+		if(nextFileHdr == NULL){
+			DEBUG(dbgMp4, "in FileHeader::ByteToSector, potential error: filesize > MaxFilesize but no next file header");
+			ASSERT(FALSE); // kill the program
+		}
+		return nextFileHdr->ByteToSector(offset - MaxFileSize);
+	}
 	return (dataSectors[offset / SectorSize]);
 }
 
@@ -165,7 +217,7 @@ int FileHeader::ByteToSector(int offset)
 // 	Return the number of bytes in the file.
 //----------------------------------------------------------------------
 
-int FileHeader::FileLength()
+int FileHeader::FileLength()	// Return the length of the [this] layer
 {
 	return numBytes;
 }

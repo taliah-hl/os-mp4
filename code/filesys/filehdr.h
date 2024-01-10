@@ -58,7 +58,7 @@ public:
 								  // to the disk sector containing
 								  // the byte
 
-	int FileLength(); // Return the length of the file
+	int FileLength(); // Return the length of the this layer
 					  // in bytes
 
 	void Print(); // Print the contents of the file.
@@ -79,7 +79,9 @@ private:
 		
 	*/
 
-	int numBytes;				// Number of bytes in the file
+	int numBytes;				// Number of bytes in the file (this layer)
+	// num byte of this file on [this] layer
+	
 	int numSectors;				// Number of data sectors in the file
 	// 這file 總共用了幾個sector
 	int dataSectors[NumDirect]; // Disk sector numbers for each data
@@ -90,6 +92,17 @@ private:
 	//NumDirect = 30
 
 	// added in MP4
+	FileHeader* nextFileHdr;  // pointer to the next file header, NULL note this is last file header
+	// maybe dont need this
+	
+	int nextFileHdrSector;    // sector number of the next file header (means addr of next header)
+	// -1 = this is last  file header
+	int lastOccupiedIdx;   // last occupied index in dataSectors 
+	// -1 = no occupied
+	// if lastOccupiedIdx== NumDirect -1 means full -> need to use next sector
+
+	int AllocateThisLayer(PersistentBitmap *freeMap, int layerSize);
+	//return: addr of this layer file header
 
 
 };
