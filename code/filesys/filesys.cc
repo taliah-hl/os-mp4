@@ -352,6 +352,7 @@ int FileSystem::Close(OpenFileId id){
 
     delete openedFile;
     openedFileId = -1;
+    return 1;
 
 }
 

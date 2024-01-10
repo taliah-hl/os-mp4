@@ -2,10 +2,31 @@
 
 # Verification example
 To test FS_test1, we have to compile FS_test1.c and copy it to the NachOS first.
+
+```
+cd NachOS-4.0_MP4
+cd code
+cd build.linux
+```
+
 ../build.linux/nachos -cp FS_test1 /FS_test1
 
  ../build.linux/nachos -e /FS_test1
 
+# Part 2-1 ver command
+
+## Test case 1
+```
+../build.linux/nachos -f
+../build.linux/nachos -d x -cp FS_test1 /FS_test1 
+../build.linux/nachos -d x -e /FS_test1
+../build.linux/nachos -p /file1
+../build.linux/nachos -cp FS_test2 /FS_test2
+../build.linux/nachos -e /FS_test2
+
+```
+
+`./FS_partII_a.sh`
 ## Things about size
 
 Directory::Directory(int size)

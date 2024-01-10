@@ -77,13 +77,14 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		// MP4 mod tag
 #ifdef FILESYS_STUB
+
 // ifdef FILESYS_STUB - >means use UNIX FS (nachos itself no real FS)
 		case SC_Create:
 			val = kernel->machine->ReadRegister(4);
 			{
 				char *filename = &(kernel->machine->mainMemory[val]);
 				//cout << filename << endl;
-				status = SysCreate(filename);
+				status = SysCreate(filename, 0);		//0 is dummy to meet the function definition
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -93,43 +94,15 @@ void ExceptionHandler(ExceptionType which)
 			ASSERTNOTREACHED();
 			break;
 #endif
-// real nachos FS below
-		case SC_Add:
-			DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
-			/* Process SysAdd Systemcall*/
-			int result;
-			result = SysAdd(/* int op1 */ (int)kernel->machine->ReadRegister(4),
-							/* int op2 */ (int)kernel->machine->ReadRegister(5));
-			DEBUG(dbgSys, "Add returning with " << result << "\n");
-			/* Prepare Result */
-			kernel->machine->WriteRegister(2, (int)result);
-			/* Modify return point */
-			{
-				/* set previous programm counter (debugging only)*/
-				kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+#ifndef FILESYS_STUB
 
-				/* set programm counter to next instruction (all Instructions are 4 byte wide)*/
-				kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
-
-				/* set next programm counter for brach execution */
-				kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
-			}
-			cout << "result is " << result << "\n";
-			return;
-			ASSERTNOTREACHED();
-			break;
-		case SC_Exit:
-			DEBUG(dbgAddr, "Program exit\n");
-			val = kernel->machine->ReadRegister(4);
-			cout << "return value:" << val << endl;
-			kernel->currentThread->Finish();
-			break;
+// real nachos FS below  [MP4]
 		case SC_Create:
 			val = kernel->machine->ReadRegister(4);
 			{
 				char *filename = &(kernel->machine->mainMemory[val]);
 			 	int initialSize = kernel->machine->ReadRegister(5);
-				status = SysCreate(filename);
+				status = SysCreate(filename, initialSize);
 				kernel->machine->WriteRegister(2, (int)status);
 			} 
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -186,8 +159,8 @@ void ExceptionHandler(ExceptionType which)
 			{
 				char *buffer = &(kernel->machine->mainMemory[val]);
 				int size = kernel->machine->ReadRegister(5);
-			int id = kernel->machine->ReadRegister(6);
-				status = SysWrite(buffer, size);
+				int id = kernel->machine->ReadRegister(6);
+				status = SysWrite(buffer, size, id);
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			//not yet verified
@@ -206,6 +179,39 @@ void ExceptionHandler(ExceptionType which)
 			}
 			// not yet verified
 			break;
+
+#endif
+		case SC_Add:
+			DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
+			/* Process SysAdd Systemcall*/
+			int result;
+			result = SysAdd(/* int op1 */ (int)kernel->machine->ReadRegister(4),
+							/* int op2 */ (int)kernel->machine->ReadRegister(5));
+			DEBUG(dbgSys, "Add returning with " << result << "\n");
+			/* Prepare Result */
+			kernel->machine->WriteRegister(2, (int)result);
+			/* Modify return point */
+			{
+				/* set previous programm counter (debugging only)*/
+				kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+
+				/* set programm counter to next instruction (all Instructions are 4 byte wide)*/
+				kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
+
+				/* set next programm counter for brach execution */
+				kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
+			}
+			cout << "result is " << result << "\n";
+			return;
+			ASSERTNOTREACHED();
+			break;
+		case SC_Exit:
+			DEBUG(dbgAddr, "Program exit\n");
+			DEBUG(dbgMp4, "SC_Exit in exception handler is reache");
+			val = kernel->machine->ReadRegister(4);
+			cout << "return value:" << val << endl;
+			kernel->currentThread->Finish();
+			break;
 			
 		default:
 			cerr << "Unexpected system call " << type << "\n";
@@ -216,5 +222,6 @@ void ExceptionHandler(ExceptionType which)
 		cerr << "Unexpected user mode exception " << (int)which << "\n";
 		break;
 	}
+	DEBUG(dbgMp4, "in ExceptionHandler, reached expected unregion, type of exception: "  << which << " type: " << type << "\n");
 	ASSERTNOTREACHED();
 }

@@ -38,6 +38,8 @@
 //----------------------------------------------------------------------
 FileHeader::FileHeader()
 {
+
+	DEBUG(dbgMp4, "constructor of fileheader is called");
 	numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
@@ -74,6 +76,7 @@ FileHeader::~FileHeader()
 bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return true = have space; false= no enough space
 {
 	
+	DEBUG(dbgMp4, "FileHeader::Allocate is allocating fileSize: " << fileSize);
 	// return: success or not
 	
 	//bool success = FALSE;
@@ -127,6 +130,7 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return tr
 
 void FileHeader::Deallocate(PersistentBitmap *freeMap)
 {
+	DEBUG(dbgMp4, "FileHeader::Deallocate is called");
 	for (int i = 0; i < numSectors; i++)
 	{
 		ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
@@ -150,6 +154,7 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
 
 void FileHeader::FetchFrom(int sector)
 {
+	DEBUG(dbgMp4, "FileHeader::FetchFrom is fetching from sector " << sector);
 	kernel->synchDisk->ReadSector(sector, (char *)this);
 
 	/*
@@ -158,7 +163,7 @@ void FileHeader::FetchFrom(int sector)
 	*/
 	if(nextFileHdrSector != -1){	// this is necceaary becaause next filehdr may not have been loaded to memory
 		nextFileHdr = new FileHeader();
-		nextFileHdr->FetchFrom(nextFileHdrSector)
+		nextFileHdr->FetchFrom(nextFileHdrSector);
 	}
 	
 		
@@ -173,6 +178,7 @@ void FileHeader::FetchFrom(int sector)
 
 void FileHeader::WriteBack(int sector)
 {
+	DEBUG(dbgMp4, "FileHeader::WriteBack is running");
 	kernel->synchDisk->WriteSector(sector, (char *)this);
 
 	/*
@@ -201,7 +207,7 @@ void FileHeader::WriteBack(int sector)
 
 int FileHeader::ByteToSector(int offset)
 {
-	
+	DEBUG(dbgMp4, "in FileHeader::ByteToSector, offset = " << offset);
 	if((offset / SectorSize) >= NumDirect){
 		if(nextFileHdr == NULL){
 			DEBUG(dbgMp4, "in FileHeader::ByteToSector, potential error: filesize > MaxFilesize but no next file header");
