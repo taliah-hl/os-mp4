@@ -127,6 +127,7 @@ int OpenFile::ReadAt(char *into, int numBytes, int position)
     if ((position + numBytes) > fileLength)		
 	numBytes = fileLength - position;
     DEBUG(dbgFile, "Reading " << numBytes << " bytes at " << position << " from file of length " << fileLength);
+    DEBUG(dbgMp4, "Reading " << numBytes << " bytes at " << position << " from file of length " << fileLength);
 
     firstSector = divRoundDown(position, SectorSize);
     lastSector = divRoundDown(position + numBytes - 1, SectorSize);

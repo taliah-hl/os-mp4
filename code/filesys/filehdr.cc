@@ -58,8 +58,8 @@ FileHeader::FileHeader()
 FileHeader::~FileHeader()
 {
 	// nothing to do now
-	if (nextFileHdr != NULL)
-		delete nextFileHdr;
+	// if (nextFileHdr != NULL)
+	// 	delete nextFileHdr;
 }
 
 //----------------------------------------------------------------------
@@ -108,6 +108,7 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return tr
 			DEBUG(dbgMp4, "in FileHeader::Allocate: no enough space for next layer");
 			return FALSE;
 		}
+		DEBUG(dbgMp4, "in FileHeader::Allocate, allocated to sector " << nextFileHdrSector);
 			
 		nextFileHdr = new FileHeader();
 		
@@ -136,12 +137,11 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
 		ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
 		freeMap->Clear((int)dataSectors[i]);
 	}
-	if (nextFileHdr != NULL)
-	{
-		nextFileHdr->Deallocate(freeMap);	// clear things in next header
-		delete nextFileHdr;		// delete the next header itself
-		nextFileHdr = NULL;		// set to NULL to acoid dangling pointer
-		nextFileHdrSector = -1;
+	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
+		DEBUG(dbgMp4, "in FileHeader::Deallocate, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
+	}
+	if(nextFileHdr != NULL){
+		nextFileHdr->Deallocate(freeMap);
 	}
 }
 
@@ -156,7 +156,7 @@ void FileHeader::FetchFrom(int sector)
 {
 	DEBUG(dbgMp4, "FileHeader::FetchFrom is fetching from sector " << sector);
 	kernel->synchDisk->ReadSector(sector, (char *)this);
-
+	
 	/*
 		MP4 Hint:
 		After you add some in-core informations, you will need to rebuild the header's structure
@@ -179,7 +179,7 @@ void FileHeader::FetchFrom(int sector)
 void FileHeader::WriteBack(int sector)
 {
 	DEBUG(dbgMp4, "FileHeader::WriteBack is running");
-	kernel->synchDisk->WriteSector(sector, (char *)this);
+	kernel->synchDisk->WriteSector(sector, (char *)this); 
 
 	/*
 		MP4 Hint:
@@ -189,7 +189,9 @@ void FileHeader::WriteBack(int sector)
 		memcpy(buf + offset, &dataToBeWritten, sizeof(dataToBeWritten));
 		...
 	*/
-
+	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
+		DEBUG(dbgMp4, "in FileHeader::WriteBack, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
+	}
 	if(nextFileHdr != NULL){
 		nextFileHdr->WriteBack(nextFileHdrSector);
 	}
@@ -208,14 +210,15 @@ void FileHeader::WriteBack(int sector)
 int FileHeader::ByteToSector(int offset)
 {
 	DEBUG(dbgMp4, "in FileHeader::ByteToSector, offset = " << offset);
-	if((offset / SectorSize) >= NumDirect){
+	int idx = offset / SectorSize;
+	if(idx >= NumDirect){
 		if(nextFileHdr == NULL){
 			DEBUG(dbgMp4, "in FileHeader::ByteToSector, potential error: filesize > MaxFilesize but no next file header");
 			ASSERT(FALSE); // kill the program
 		}
 		return nextFileHdr->ByteToSector(offset - MaxFileSize);
 	}
-	return (dataSectors[offset / SectorSize]);
+	return (dataSectors[idx]);
 }
 
 //----------------------------------------------------------------------
@@ -226,6 +229,9 @@ int FileHeader::ByteToSector(int offset)
 int FileHeader::FileLength()	// Return the length of total file
 {
 	
+	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
+		DEBUG(dbgMp4, "in FileHeader::FileLength, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
+	}
 	if(nextFileHdr != NULL){
 		int len = numBytes + nextFileHdr->FileLength();
 		return len;

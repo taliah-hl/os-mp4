@@ -17,7 +17,7 @@ cd build.linux
 
 ## Test case 1
 ```
-../build.linux/nachos -f
+../build.linux/nachos -d x -f
 ../build.linux/nachos -d x -cp FS_test1 /FS_test1 
 ../build.linux/nachos -d x -e /FS_test1
 ../build.linux/nachos -p /file1
@@ -27,6 +27,17 @@ cd build.linux
 ```
 
 `./FS_partII_a.sh`
+```
+./FS_partII_b.sh
+./mp4-check.sh
+```
+
+```
+../build.linux/nachos -f
+../build.linux/nachos -d x -cp num_1000.txt /1000
+../build.linux/nachos -p /1000
+
+```
 ## Things about size
 
 Directory::Directory(int size)

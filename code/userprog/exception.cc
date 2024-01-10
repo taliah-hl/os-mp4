@@ -178,6 +178,11 @@ void ExceptionHandler(ExceptionType which)
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			// not yet verified
+			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
+			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg)+4);
+			kernel->machine->WriteRegister(NextPCReg ,kernel->machine->ReadRegister(PCReg)+4);
+			return;
+			ASSERTNOTREACHED();
 			break;
 
 #endif
