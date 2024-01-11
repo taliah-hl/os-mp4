@@ -22,13 +22,13 @@
 #define SC_Exit		1
 #define SC_Exec		2
 #define SC_Join		3
-#define SC_Create	4       // need in part 2
-#define SC_Remove   5       // need in part 3
-#define SC_Open		6       // need in part 2
-#define SC_Read		7       // need in part 2
-#define SC_Write	8       // need in part 2
-#define SC_Seek     9
-#define SC_Close	10      // need in part 2
+#define SC_Create	4
+#define SC_Remove       5
+#define SC_Open		6
+#define SC_Read		7
+#define SC_Write	8
+#define SC_Seek         9
+#define SC_Close	10
 #define SC_ThreadFork	11
 #define SC_ThreadYield	12
 #define SC_ExecV	13
@@ -114,9 +114,7 @@ typedef int OpenFileId;
 /* Create a Nachos file, with name "name" */
 /* Note: Create does not open the file.   */
 /* Return 1 on success, negative error code on failure */
-
-// int Create(char *name); // FILESYS_STUB
-int Create(char *name, int size); // FILE_SYS
+int Create(char *name, int size);
 
 /* Remove a Nachos file, with name "name" */
 int Remove(char *name);
