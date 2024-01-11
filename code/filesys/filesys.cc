@@ -280,7 +280,7 @@ bool FileSystem::Create(char *name, int initialSize)
 //	"name" -- the text name of the file to be opened
 //----------------------------------------------------------------------
 
-OpenFile * FileSystem::Open(char *name)
+OpenFile * FileSystem::OpenAFile(char *name)
 {
     Directory *directory = new Directory(NumDirEntries);
     OpenFile *openFile = NULL;
@@ -306,8 +306,8 @@ OpenFile * FileSystem::Open(char *name)
     return openedFile; // return NULL if not found
 }
 
-OpenFileId FileSystem::OpenAFile(char *name){
-    Open(name);
+OpenFileId FileSystem::Open(char *name){
+    OpenAFile(name);
     return openedFileId;
 }
 

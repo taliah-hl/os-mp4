@@ -46,7 +46,7 @@ int SysCreate(char *filename, int size)
 
 OpenFileId SysOpen(char *name)
 {
-  return kernel->fileSystem->OpenAFile(name);
+  return kernel->fileSystem->Open(name);
 }
 
 int SysWrite(char *buffer, int size, OpenFileId id)

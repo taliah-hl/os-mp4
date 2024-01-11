@@ -103,7 +103,7 @@ static void Copy(char *from, char *to)
         return;
     }
 
-    openFile = kernel->fileSystem->Open(to);
+    openFile = kernel->fileSystem->OpenAFile(to);
     ASSERT(openFile != NULL);
 
     // Copy the data in TransferSize chunks
@@ -130,7 +130,7 @@ void Print(char *name)
     int i, amountRead;
     char *buffer;
 
-    if ((openFile = kernel->fileSystem->Open(name)) == NULL)
+    if ((openFile = kernel->fileSystem->OpenAFile(name)) == NULL)
     {
         printf("Print: unable to open file %s\n", name);
         return;

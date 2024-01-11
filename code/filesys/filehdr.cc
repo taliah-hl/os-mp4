@@ -43,7 +43,6 @@ FileHeader::FileHeader()
 	numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
-	lastOccupiedIdx = -1;
 	nextFileHdrSector = -1;
 	nextFileHdr=NULL;
 }
@@ -214,7 +213,7 @@ int FileHeader::ByteToSector(int offset)
 	if(idx >= NumDirect){
 		if(nextFileHdr == NULL){
 			DEBUG(dbgMp4, "in FileHeader::ByteToSector, potential error: filesize > MaxFilesize but no next file header");
-			ASSERT(FALSE); // kill the program
+			return (dataSectors[idx]);
 		}
 		return nextFileHdr->ByteToSector(offset - MaxFileSize);
 	}

@@ -95,9 +95,9 @@ public:
 	bool Create(char *name, int initialSize);
 	// Create a file (UNIX creat)
 
-	OpenFile * Open(char *name); // Open a file (UNIX open)
+	OpenFile * OpenAFile(char *name); // Open a file (UNIX open)
 
-	OpenFileId OpenAFile(char *name); // add by me
+	OpenFileId Open(char *name); // add by me
 
 	
 	OpenFile *GetOpenedFile(){		// there will be only 1 file opened
