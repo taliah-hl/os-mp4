@@ -3,41 +3,52 @@
 # Verification example
 To test FS_test1, we have to compile FS_test1.c and copy it to the NachOS first.
 
-```
-cd NachOS-4.0_MP4
-cd code
-cd build.linux
-```
+## Build
+```cd NachOS-4.0_MP4```
 
-../build.linux/nachos -cp FS_test1 /FS_test1
+`cd code`
 
- ../build.linux/nachos -e /FS_test1
+`cd build.linux`
 
-# Part 2-1 ver command
+## Test case IIa
 
-## Test case 1
-```
-../build.linux/nachos -d x -f
-../build.linux/nachos -d x -cp FS_test1 /FS_test1 
-../build.linux/nachos -d x -e /FS_test1
-../build.linux/nachos -p /file1
-../build.linux/nachos -cp FS_test2 /FS_test2
-../build.linux/nachos -e /FS_test2
+`../build.linux/nachos -d x -f`
 
-```
+`../build.linux/nachos -d x -cp FS_test1 /FS_test1`
+
+`../build.linux/nachos -d x -e /FS_test1`
+
+`../build.linux/nachos -p /file1`
+
+`../build.linux/nachos -cp FS_test2 /FS_test2`
+
+`../build.linux/nachos -e /FS_test2`
+
+
+## Test case IIb
+
+`../build.linux/nachos -f`
+
+`../build.linux/nachos -cp FS_test1 /FS_test1`
+
+`../build.linux/nachos -e /FS_test1`
+
+`../build.linux/nachos -p /file1`
+
+`../build.linux/nachos -cp FS_test2 /FS_test2`
+
+`../build.linux/nachos -e /FS_test2`
+
+
+## Test case III
 
 `./FS_partII_a.sh`
-```
-./FS_partII_b.sh
-./mp4-check.sh
-```
 
-```
-../build.linux/nachos -f
-../build.linux/nachos -d x -cp num_1000.txt /1000
-../build.linux/nachos -p /1000
+`./FS_partII_b.sh`
 
-```
+`./mp4-check.sh`
+
+
 ## Things about size
 
 Directory::Directory(int size)
@@ -131,7 +142,7 @@ filesys.cc
 
 看disk.h
 
-### (3)
+### (3) the directory data structure
 看filesys.cc
 ```cpp
 
