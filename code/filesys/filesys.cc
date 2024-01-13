@@ -1,43 +1,52 @@
-// filesys.cc 
+// filesys.cc
 //	Routines to manage the overall operation of the file system.
 //	Implements routines to map from textual file names to files.
 //
-//	**Each file in the file system has**:
-//	  A **file header**, stored in a sector on disk 
-//		  (the size of the file header data structure is arranged
-//		  to be precisely the size of **1 disk sector**)
-//	  A number of **data blocks**
-//	  An **entry** in the file system **directory**
+//	Each file in the file system has:
+//	   A file header, stored in a sector on disk
+//		(the size of the file header data structure is arranged
+//		to be precisely the size of 1 disk sector)
+//	   A number of data blocks
+//	   An entry in the file system directory
 //
 // 	The file system consists of several data structures:
-//	   A **bitmap of free disk sectors** (cf. bitmap.h)
-//	   A **directory of file names** and **file headers**
+//	   A bitmap of free disk sectors (cf. bitmap.h)
+//	   A directory of file names and file headers
 //
-//  Both the bitmap and the directory are represented as normal
-//	files.  **Their file headers are located in specific sectors**
-//	**(sector 0 and sector 1)**, so that the file system can find them 
+//      Both the bitmap and the directory are represented as normal
+//	files.  Their file headers are located in specific sectors
+//	(sector 0 and sector 1), so that the file system can find them
 //	on bootup.
 //
-//	The file system assumes that the **bitmap and directory files** are
-//	**kept "open" continuously** while Nachos is running.
-//  200112: �Ѧ�kernel.c�Pfilesystem�غc�l
+//  !!!!!!   ------ IN SHORT  -----  [BY ME]  !!!!!!
+//
+//      bitmap on Sector 0
+//      directory on Sector 1
+//
+//	The file system assumes that the bitmap and directory files are
+//	kept "open" continuously while Nachos is running.
 //
 //	For those operations (such as Create, Remove) that modify the
 //	directory and/or bitmap, if the operation succeeds, the changes
 //	are written immediately back to disk (the two files are kept
 //	open during all this time).  If the operation fails, and we have
-//	modified part of the directory and/or bitmap, **we simply discard
-//	the changed version, without writing it back to disk**.
+//	modified part of the directory and/or bitmap, we simply discard
+//	the changed version, without writing it back to disk.
 //
 // 	Our implementation at this point has the following restrictions:
-//	   there is **no synchronization for concurrent** accesses
-//	   files have a **fixed size**, **set when the file is created**
-//	   ****files cannot be bigger than about 3KB in size****
-//	   there is no hierarchical directory structure, and only a limited number of files can be added to the system
-//	   there is no attempt to make the system robust to failures
-//	    (**if Nachos exits in the middle of an operation that modifies
-//	    the file system, it may corrupt the disk**)
 //
+//	   there is no synchronization for concurrent accesses
+//	   files have a fixed size, set when the file is created
+//	   files cannot be bigger than about 3KB in size
+//	   there is no hierarchical directory structure, and only a limited
+//	     number of files can be added to the system
+//	   there is no attempt to make the system robust to failures
+//	    (if Nachos exits in the middle of an operation that modifies
+//	    the file system, it may corrupt the disk)
+//
+// Copyright (c) 1992-1993 The Regents of the University of California.
+// All rights reserved.  See copyright.h for copyright notice and limitation
+// of liability and disclaimer of warranty provisions.
 #ifndef FILESYS_STUB
 
 #include "copyright.h"
@@ -58,8 +67,22 @@
 // supports extensible files, the directory size sets the maximum number 
 // of files that can be loaded onto the disk.
 #define FreeMapFileSize 	(NumSectors / BitsInByte)
-#define NumDirEntries 		64 // MP4��o��n���@�Ӹ�Ƨ��N��s64��file�F
-#define DirectoryFileSize 	(sizeof(DirectoryEntry) * NumDirEntries)
+// bitmap 的初始大小(應該是)
+// = total number of sectors / number of bits in a byte
+// unit should be bytes (to be confirmed)
+//
+//未改code 前:
+////NumSectors=SectorsPerTrack * NumTracks=32*32=1024 (from machine/disk.h)
+
+#define NumDirEntries 64
+// = directory 可有多少entry
+// =可裝多少file
+// = 未改code 之前只可裝10個file
+
+
+#define DirectoryFileSize (sizeof(DirectoryEntry) * NumDirEntries)
+// directory file 佔的空間
+// DirectoryEntry = directory 的一格 (一個entry)
 
 //----------------------------------------------------------------------
 // FileSystem::FileSystem
@@ -73,11 +96,13 @@
 //
 //	"format" -- should we initialize the disk?
 //----------------------------------------------------------------------
+
 FileSystem::FileSystem(bool format)
 { 
     DEBUG(dbgFile, "Initializing the file system.");
     if (format) {
-        PersistentBitmap *freeMap = new PersistentBitmap(NumSectors);
+        PersistentBitmap *freeMap = new PersistentBitmap(NumSectors);   //NumSectors=1024 for now
+        //開一個1024格的map
         Directory *directory = new Directory(NumDirEntries);
     		FileHeader *mapHdr = new FileHeader;
     		FileHeader *dirHdr = new FileHeader;
@@ -90,7 +115,7 @@ FileSystem::FileSystem(bool format)
 
     		// Second, allocate space for the data blocks containing the contents
     		// of the directory and bitmap files.  There better be enough space!    
-    		ASSERT(mapHdr->Allocate(freeMap, FreeMapFileSize));
+    		ASSERT(mapHdr->Allocate(freeMap, FreeMapFileSize)); //FreeMapFileSize=bitmap 的初始大小
     		ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
 
   		  //  Flush the bitmap and directory FileHeaders back to disk
@@ -171,6 +196,15 @@ FileSystem::~FileSystem()
 //	"name" -- name of file to be created
 //	"initialSize" -- size of file to be created
 //----------------------------------------------------------------------
+
+int FileSystem::CreateAFile(char * name, int initialSize){
+    bool res = Create(name, initialSize);
+    if(res) return 1;
+    else return -1;
+
+}
+
+
 bool
 FileSystem::Create(char *name, int initialSize)
 {
@@ -183,7 +217,11 @@ FileSystem::Create(char *name, int initialSize)
     DEBUG(dbgFile, "Creating file " << name << " size " << initialSize);
 
     directory = new Directory(NumDirEntries);
-    directory->FetchFrom(directoryFile);
+    directory->FetchFrom(directoryFile);    //fetch directory from disk
+     //why create new directory when create file?
+    // -> everytime when create file, need to fetch directory from disk 
+    // -> get latest true status of directory in disk
+
 
     if (directory->Find(name) != -1)
       success = FALSE;			// file is already in directory
@@ -237,6 +275,45 @@ FileSystem::Open(char *name)
     delete directory;
     return openFile;				// return NULL if not found
 }
+
+OpenFileId FileSystem::OpenAFile(char *name){
+    Open(name);
+    return 1;   // dummy openFileId
+}
+
+/// ---------------
+// ------ below add by me for MP4 --------
+int FileSystem::Read(char *buf, int size, OpenFileId id){   //return numbyte read, -1 means failed
+    
+    OpenFile* fileToRead = openedFile;
+    if (fileToRead == NULL){
+        DEBUG(dbgFile, "openedFile is NULL, read failed");
+        return -1;
+    }
+    int numRead = -1;
+    numRead = fileToRead->Read(buf, size);
+    if (numRead <0) return -1;
+    
+    return numRead;     //return num byte read
+
+}
+int FileSystem::Write(char *buf, int size, OpenFileId id){
+    // retuen num byte written
+    // -1 means failed
+    
+    OpenFile* fileToWrite = openedFile;
+    if(fileToWrite == NULL){
+        DEBUG(dbgFile, "openedFile is NULL, write failed");
+        return -1;
+    }
+    int numWritten = -1;
+    numWritten = fileToWrite->Write(buf, size);
+    if(numWritten <0) return -1;
+    return numWritten;
+
+
+}
+
 
 //----------------------------------------------------------------------
 // FileSystem::Remove
@@ -296,54 +373,15 @@ FileSystem::List()
     delete directory;
 }
 
-/******************************************************************************/
-int FileSystem::CreateFile0(char* name, int initialSize)
-{
-    return Create(name, initialSize);
-}
 
-OpenFileId FileSystem::OpenFile0(char* name)
-{
-    OpenFile* openPtr = Open(name);
-    return PutFileDescriptor(openPtr);
-}
+int FileSystem::Close(OpenFileId id){
 
-int FileSystem::ReadFile0(char* buffer,int size, int id)
-{
-    if(id <= 0 || id >= MAXOPENFILES) return -1;
-    if(fileDescriptorTable[id] == NULL) return -1;
-    return fileDescriptorTable[id]->Read(buffer, size);
-}
-
-int FileSystem::WriteFile0(char* buffer,int size, int id)
-{
-    if(id <= 0 || id >= MAXOPENFILES) return -1;
-    if(fileDescriptorTable[id] == NULL) return -1;
-    return fileDescriptorTable[id]->Write(buffer, size);
-}
-
-int FileSystem::CloseFile0(int id)
-{
-    if(id < 0 || id >= MAXOPENFILES) return -1;
-    if(fileDescriptorTable[id] == NULL) return -1;
-    delete fileDescriptorTable[id];
-    fileDescriptorTable[id] = NULL;
+    delete openedFile;
     return 1;
+
 }
 
-OpenFileId FileSystem::PutFileDescriptor(OpenFile* FileDesc)
-{
-    int cnt = 0;
-    while( (++fileDescriptorIndex % MAXOPENFILES == 0) || fileDescriptorTable[fileDescriptorIndex] != NULL)
-    {
-        if(cnt < MAXOPENFILES)
-            cnt++;
-        else
-            return 0;
-    }
-    fileDescriptorTable[fileDescriptorIndex] = FileDesc;
-    return fileDescriptorIndex;
-}
+
 /*********************************************************************************************/
 
 //----------------------------------------------------------------------

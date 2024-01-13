@@ -35,30 +35,30 @@ int SysCreate(char *filename)
 	return kernel->interrupt->CreateFile(filename);
 }
 #else
-// 200112[J]: MP4·s¼W
+// 200112[J]: MP4ï¿½sï¿½W
 int SysCreate(char *filename, int size)
 {
-	return kernel->fileSystem->CreateFile0(filename, size);
+	return kernel->fileSystem->CreateAFile(filename, size);
 }
 
 OpenFileId SysOpen(char *name)
 {
-  return kernel->fileSystem->OpenFile0(name);
+  return kernel->fileSystem->OpenAFile(name);
 }
 
 int SysWrite(char *buffer, int size, OpenFileId id)
 {
-  return kernel->fileSystem->WriteFile0(buffer, size, id);
+  return kernel->fileSystem->Write(buffer, size, id);
 }
 
 int SysRead(char *buffer, int size, OpenFileId id)
 {
-  return kernel->fileSystem->ReadFile0(buffer, size, id);
+  return kernel->fileSystem->Read(buffer, size, id);
 }
 
 int SysClose(OpenFileId id)
 {
-  return kernel->fileSystem->CloseFile0(id);
+  return kernel->fileSystem->Close(id);
 }
 // **********************************************************************
 #endif

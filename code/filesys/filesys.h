@@ -63,11 +63,11 @@ class FileSystem {
 	
 };
 
-// 200112[J]: MP4走這邊
+// 200112[J]: MP4嚙踝蕭嚙緻嚙踝蕭
 #else // FILESYS
 
-// 200112: 其實MAXOPENFILE會比設定值少1 (0不存)
-# define MAXOPENFILES 65
+
+
 
 class FileSystem {
   public:
@@ -79,23 +79,36 @@ class FileSystem {
 	
 	  ~FileSystem();
     
-    // 200112[J]: MP4新增***************************
-    bool Create(char *name, int initialSize);     // 跟下面的CreateFile0幾乎一樣，主要是給OS內部用的
-    OpenFile* Open(char *name);                   // 跟下面的OpenFile0幾乎一樣，主要是給OS內部用的
-    
-    int CreateFile0(char* name, int initialSize);  // Create a file (UNIX creat)
-    OpenFileId OpenFile0(char* name);              // Open a file (UNIX open)
-    int ReadFile0(char* buffer,int initialSize, int id);
-    int WriteFile0(char* buffer,int initialSize, int id);
-    int CloseFile0(int id);
-    OpenFileId PutFileDescriptor(OpenFile* fileDescriptor);
+	int CreateAFile(char * name, int initialSize);
+	// success return 1, fail resturn -1
 
-    int fileDescriptorIndex;
-    OpenFile* fileDescriptorTable[MAXOPENFILES];
+	
+	bool Create(char *name, int initialSize);
+	// Create a file (UNIX creat)
+
+	OpenFile * Open(char *name); // Open a file (UNIX open)
+
+	OpenFileId OpenAFile(char *name); // add by me
+
+	
+	OpenFile *GetOpenedFile(){		// there will be only 1 file opened
+		return openedFile;
+	}
+
     //************************************************
     
     // Delete a file (UNIX unlink)
     bool Remove(char *name);
+
+	int Read(char *buf, int size, OpenFileId id);	  
+	//return numbyte read, -1 means failed
+
+	int Write(char *buf, int size, OpenFileId id);
+	//return numbyte written, -1 means failed
+
+
+	int Close(OpenFileId id);
+	// delete openedFile & set back openedFileId to -1
     
     // List all the files in the file system
     void List();
@@ -108,6 +121,8 @@ class FileSystem {
     OpenFile* freeMapFile;
     // **"Root" directory** -- list of file names, represented as a file
     OpenFile* directoryFile;
+
+	OpenFile* openedFile;	// the only 1 opened file
 };
 
 #endif // FILESYS
