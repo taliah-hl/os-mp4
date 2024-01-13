@@ -343,7 +343,7 @@ Thread::StackAllocate (VoidFunctionPtr func, void *arg)
     // to go to ThreadRoot when we switch to this thread, the return addres 
     // used in SWITCH() must be the starting address of ThreadRoot.
     stackTop = stack + StackSize - 4;	// -4 to be on the safe side!
-    // *(--stackTop) = (int) ThreadRoot;
+    *(--stackTop) = (int) ThreadRoot;
     *stack = STACK_FENCEPOST;
 #endif
     

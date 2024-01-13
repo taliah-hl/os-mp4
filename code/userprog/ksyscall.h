@@ -8,25 +8,25 @@
  *
  **************************************************************/
 
-#ifndef __USERPROG_KSYSCALL_H__
-#define __USERPROG_KSYSCALL_H__
+#ifndef __USERPROG_KSYSCALL_H__ 
+#define __USERPROG_KSYSCALL_H__ 
 
 #include "kernel.h"
 
 #include "synchconsole.h"
 
+
 void SysHalt()
 {
-	kernel->interrupt->Halt();
+  kernel->interrupt->Halt();
 }
 
 int SysAdd(int op1, int op2)
 {
-	return op1 + op2;
+  return op1 + op2;
 }
 
-#ifdef FILESYS_STUB	
-// ifdef FILESYS_STUB - >means use UNIX FS (nachos itself no real FS)
+#ifdef FILESYS_STUB
 int SysCreate(char *filename)
 {
 	// return value
@@ -35,36 +35,32 @@ int SysCreate(char *filename)
 	return kernel->interrupt->CreateFile(filename);
 }
 #else
-
-// case for real nachos  (MP4)
-// below added in MP4
-// system calls
+// 200112[J]: MP4·s¼W
 int SysCreate(char *filename, int size)
 {
-	return kernel->fileSystem->CreateAFile(filename, size);
+	return kernel->fileSystem->CreateFile0(filename, size);
 }
 
 OpenFileId SysOpen(char *name)
 {
-  return kernel->fileSystem->OpenAFile(name);
+  return kernel->fileSystem->OpenFile0(name);
 }
 
 int SysWrite(char *buffer, int size, OpenFileId id)
 {
-  return kernel->fileSystem->Write(buffer, size, id);
+  return kernel->fileSystem->WriteFile0(buffer, size, id);
 }
 
 int SysRead(char *buffer, int size, OpenFileId id)
 {
-  return kernel->fileSystem->Read(buffer, size, id);
+  return kernel->fileSystem->ReadFile0(buffer, size, id);
 }
 
 int SysClose(OpenFileId id)
 {
-  return kernel->fileSystem->Close(id);
+  return kernel->fileSystem->CloseFile0(id);
 }
-
-
+// **********************************************************************
 #endif
 
 

@@ -1,26 +1,21 @@
-// filehdr.cc
+// filehdr.cc 
 //	Routines for managing the disk file header (in UNIX, this
 //	would be called the i-node).
 //
-//	The file header is used to locate where on disk the
-//	file's data is stored.  We implement this as a fixed size
-//	table of pointers -- each entry in the table points to the
-//	disk sector containing that portion of the file data
-//	(in other words, there are no indirect or doubly indirect
-//	blocks). The table size is chosen so that the file header
-//	will be just big enough to fit in one disk sector,
+//	The file header is used to locate where on disk the 
+//	file's data is stored.  We implement this as a **fixed size
+//	table of pointers** -- **each entry in the table points to the 
+//	disk sector** containing that portion of the file data
+//	(in other words, there are no indirect or doubly indirect 
+//	blocks). **The table size is chosen so that the file header
+//	will be just big enough to fit in one disk sector**, 
 //
-//      Unlike in a real system, we do not keep track of file permissions,
-//	ownership, last modification date, etc., in the file header.
+//      Unlike in a real system, **we do not keep track of file permissions, 
+//	ownership, last modification date, etc.**, in the file header. 
 //
 //	A file header can be initialized in two ways:
-//	   for a new file, by modifying the in-memory data structure
-//	     to point to the newly allocated data blocks
+//	   for a new file, by modifying the in-memory data structure to point to the newly allocated data blocks
 //	   for a file already on disk, by reading the file header from disk
-//
-// Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation
-// of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
 
@@ -38,13 +33,13 @@
 //----------------------------------------------------------------------
 FileHeader::FileHeader()
 {
-
-	DEBUG(dbgMp4, "constructor of fileheader is called");
-	numBytes = -1;
+  // MP4 add
+  nextFileHeader = NULL;
+	nextFileHeaderSector = -1;
+	// end
+  numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
-	nextFileHdrSector = -1;
-	nextFileHdr=NULL;
 }
 
 //----------------------------------------------------------------------
@@ -56,9 +51,10 @@ FileHeader::FileHeader()
 //----------------------------------------------------------------------
 FileHeader::~FileHeader()
 {
-	// nothing to do now
-	// if (nextFileHdr != NULL)
-	// 	delete nextFileHdr;
+  // MP4 add
+	if (nextFileHeader != NULL)
+		delete nextFileHeader;
+  // end
 }
 
 //----------------------------------------------------------------------
@@ -72,54 +68,36 @@ FileHeader::~FileHeader()
 //	"fileSize" is the bit map of free disk sectors
 //----------------------------------------------------------------------
 
-bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return true = have space; false= no enough space
-{
-	
-	DEBUG(dbgMp4, "FileHeader::Allocate is allocating fileSize: " << fileSize);
-	// return: success or not
-	
-	//bool success = FALSE;
-	numBytes = fileSize < MaxFileSize? fileSize:MaxFileSize;
-	// calculate numbyte of this layer
-	int notAllocatedBytes = fileSize - numBytes;	// 這層layer不夠位裝的byte數
+// MP4 Modified********************************
+bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
+{ 
+    // 本層FH要存的Bytes
+    numBytes = fileSize < MaxFileSize ? fileSize : MaxFileSize;
+    // 剩下要存的Bytes
+    fileSize -= numBytes;	// 計仲剩低幾多Bytes可用
+    // 幫本層分配Data Sectors
+    numSectors = divRoundUp(numBytes, SectorSize);
+    
+    if (freeMap->NumClear() < numSectors)
+	    return FALSE;		// not enough space
 
-	numSectors = divRoundUp(numBytes, SectorSize);
-	if (freeMap->NumClear() < numSectors)
-		return FALSE; // not enough space
-
-
-	// 因一個file會用到超過一個sector
-	// dataSectors 每一格存這個file 的哪個sector對應到disk 上面第幾個sector(=bitmap上第幾個index)
-	for (int i = 0; i < numSectors; i++)
-	{
-
-
-		dataSectors[i] = freeMap->FindAndSet();		// 找出freeMap中第一格not in use 的index
-													// if -1 means all are used
-		// since we checked that there was enough free space,
-		// we expect this to succeed
-		ASSERT(dataSectors[i] >= 0);
-	}
-	if(notAllocatedBytes > 0){
-		// allocate next layer
-		nextFileHdrSector = freeMap->FindAndSet();
-		if (nextFileHdrSector < 0){
-			DEBUG(dbgMp4, "in FileHeader::Allocate: no enough space for next layer");
-			return FALSE;
-		}
-		DEBUG(dbgMp4, "in FileHeader::Allocate, allocated to sector " << nextFileHdrSector);
-			
-		nextFileHdr = new FileHeader();
-		
-		ASSERT(nextFileHdrSector >= 0);
-		// allocate next layer
-		return nextFileHdr->Allocate(freeMap, notAllocatedBytes);	
-		// return success or not from next layer 
-	}
-	
-
-	return TRUE;
+    for (int i = 0; i < numSectors; i++) {
+    	dataSectors[i] = freeMap->FindAndSet();
+    	ASSERT(dataSectors[i] >= 0);  // since we checked that there was enough free space, we expect this to succeed
+    }
+    // 分配完本層，再多分配一個Link指向下一個FH
+    if (fileSize > 0) {
+        nextFileHeaderSector = freeMap->FindAndSet();  // 為了確認有沒有Free Sector
+        if (nextFileHeaderSector == -1)  // 沒有Free Sector
+ 			      return FALSE;
+  		  else {
+ 			      nextFileHeader = new FileHeader;
+ 			      return nextFileHeader->Allocate(freeMap, fileSize);
+        }
+	  }
+    return TRUE;
 }
+// end*******************************************
 
 //----------------------------------------------------------------------
 // FileHeader::Deallocate
@@ -127,61 +105,62 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)		// return tr
 //
 //	"freeMap" is the bit map of free disk sectors
 //----------------------------------------------------------------------
-
+// MP4 Modified********************************
 void FileHeader::Deallocate(PersistentBitmap *freeMap)
 {
-	DEBUG(dbgMp4, "FileHeader::Deallocate is called");
-	for (int i = 0; i < numSectors; i++)
-	{
-		ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
-		freeMap->Clear((int)dataSectors[i]);
-	}
-	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
-		DEBUG(dbgMp4, "in FileHeader::Deallocate, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
-	}
-	if(nextFileHdr != NULL){
-		nextFileHdr->Deallocate(freeMap);
-	}
+    for (int i = 0; i < numSectors; i++) {
+      ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
+      freeMap->Clear((int)dataSectors[i]);
+  	}
+  	if (nextFileHeaderSector != -1)
+  	{
+ 		  ASSERT(nextFileHeader != NULL);
+ 		  nextFileHeader->Deallocate(freeMap);
+  	}
 }
+// end*******************************************
 
 //----------------------------------------------------------------------
 // FileHeader::FetchFrom
-// 	Fetch contents of file header from disk.
+// 	Fetch contents of file header from disk. 
 //
 //	"sector" is the disk sector containing the file header
 //----------------------------------------------------------------------
-
+// MP4 Modified********************************
 void FileHeader::FetchFrom(int sector)
 {
-	DEBUG(dbgMp4, "FileHeader::FetchFrom is fetching from sector " << sector);
-	//kernel->synchDisk->ReadSector(sector, (char *)this);
-	kernel->synchDisk->ReadSector(sector, ((char *)this) + sizeof(FileHeader*));
-	
+    //DEBUG(dbgFile, "Test[J]: kernel->synchDisk->ReadSector");
+    kernel->synchDisk->ReadSector(sector, ((char *)this) + sizeof(FileHeader*));
+    //DEBUG(dbgFile, "Test[J]: Done");
+    
+    if (nextFileHeaderSector != -1)
+	  { 
+		    nextFileHeader = new FileHeader;
+		    nextFileHeader->FetchFrom(nextFileHeaderSector);
+	  }
 	/*
 		MP4 Hint:
 		After you add some in-core informations, you will need to rebuild the header's structure
 	*/
-	if(nextFileHdrSector != -1){	// this is necceaary becaause next filehdr may not have been loaded to memory
-		nextFileHdr = new FileHeader();
-		nextFileHdr->FetchFrom(nextFileHdrSector);
-	}
-	
-		
 }
+// end*******************************************
 
 //----------------------------------------------------------------------
 // FileHeader::WriteBack
-// 	Write the modified contents of the file header back to disk.
+// 	Write the modified contents of the file header back to disk. 
 //
 //	"sector" is the disk sector to contain the file header
 //----------------------------------------------------------------------
-
+// MP4 Modified********************************
 void FileHeader::WriteBack(int sector)
 {
-	DEBUG(dbgMp4, "FileHeader::WriteBack is running");
-	//kernel->synchDisk->WriteSector(sector, (char *)this); 
-	kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
-
+    kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
+	  
+    if (nextFileHeaderSector != -1)
+	  {
+        ASSERT(nextFileHeader != NULL);
+		    nextFileHeader->WriteBack(nextFileHeaderSector);
+	  }
 	/*
 		MP4 Hint:
 		After you add some in-core informations, you may not want to write all fields into disk.
@@ -190,13 +169,8 @@ void FileHeader::WriteBack(int sector)
 		memcpy(buf + offset, &dataToBeWritten, sizeof(dataToBeWritten));
 		...
 	*/
-	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
-		DEBUG(dbgMp4, "in FileHeader::WriteBack, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
-	}
-	if(nextFileHdr != NULL){
-		nextFileHdr->WriteBack(nextFileHdrSector);
-	}
 }
+// end*******************************************
 
 //----------------------------------------------------------------------
 // FileHeader::ByteToSector
@@ -207,41 +181,30 @@ void FileHeader::WriteBack(int sector)
 //
 //	"offset" is the location within the file of the byte in question
 //----------------------------------------------------------------------
-
+// MP4 **************************************************
 int FileHeader::ByteToSector(int offset)
 {
-	DEBUG(dbgMp4, "in FileHeader::ByteToSector, offset = " << offset);
-	int idx = offset / SectorSize;
-	if(idx >= NumDirect){
-		if(nextFileHdr == NULL){
-			DEBUG(dbgMp4, "in FileHeader::ByteToSector, potential error: filesize > MaxFilesize but no next file header");
-			ASSERT(FALSE); // kill the program
-		}
-		return nextFileHdr->ByteToSector(offset - MaxFileSize);
-	}
-	return (dataSectors[idx]);
+    int index = offset / SectorSize;
+  	if (index < NumDirect)
+  		 return (dataSectors[index]);
+  	else
+  	{
+  		 ASSERT(nextFileHeader != NULL);
+  		 return nextFileHeader->ByteToSector(offset - MaxFileSize);
+  	}
 }
+// end **************************************************
 
 //----------------------------------------------------------------------
 // FileHeader::FileLength
 // 	Return the number of bytes in the file.
 //----------------------------------------------------------------------
 
-int FileHeader::FileLength()	// Return the length of total file
+int
+FileHeader::FileLength()
 {
-	
-	
-	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
-		DEBUG(dbgMp4, "in FileHeader::FileLength, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
-	}
-	if(nextFileHdr != NULL){
-		int len = numBytes + nextFileHdr->FileLength();
-		return len;
-	}
-	return numBytes;
-	
+    return numBytes;
 }
-
 
 //----------------------------------------------------------------------
 // FileHeader::Print
@@ -249,57 +212,27 @@ int FileHeader::FileLength()	// Return the length of total file
 //	the data blocks pointed to by the file header.
 //----------------------------------------------------------------------
 
-void FileHeader::Print()
+void
+FileHeader::Print()
 {
-	DEBUG(dbgMp4, "FileHeader::Print is called");
-	int i, j, k;
-	char *data = new char[SectorSize];
-
-	printf("FileHeader contents.  File size: %d.  File blocks:\n", numBytes);
-	for (i = 0; i < numSectors; i++)
-		printf("%d ", dataSectors[i]);
-	printf("\nFile contents:\n");
-	for (i = k = 0; i < numSectors; i++)
-	{
-		kernel->synchDisk->ReadSector(dataSectors[i], data);
-		for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++)
-		{
-			if ('\040' <= data[j] && data[j] <= '\176') // isprint(data[j])
-				printf("%c", data[j]);
-			else
-				printf("\\%x", (unsigned char)data[j]);
-		}
-		printf("\n");
-	}
-	delete[] data;
-}
-
-void FileHeader::DebugRecursive(int layer)
-{
-    int i;
+    int i, j, k;
     char *data = new char[SectorSize];
 
-    printf("Layer %d, Sector number: %d, File size: %d. File blocks:\n", layer, nextFileHdrSector, numBytes);
+    printf("FileHeader contents.  File size: %d.  File blocks:\n", numBytes);
+    
     for (i = 0; i < numSectors; i++)
-        printf("%d ", dataSectors[i]);
+    	printf("%d ", dataSectors[i]);
+    
     printf("\nFile contents:\n");
-    for (i = 0; i < numSectors; i++)
-    {
-        kernel->synchDisk->ReadSector(dataSectors[i], data);
-        for (int j = 0; j < SectorSize; j++)
-        {
-            if ('\040' <= data[j] && data[j] <= '\176') // isprint(data[j])
-                printf("%c", data[j]);
-            else
-                printf("\\%x", (unsigned char)data[j]);
-        }
-        printf("\n");
+    for (i = k = 0; i < numSectors; i++) {
+	    kernel->synchDisk->ReadSector(dataSectors[i], data);
+      for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
+	    if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
+		    printf("%c", data[j]);
+      else
+		    printf("\\%x", (unsigned char)data[j]);
+	    }
+      printf("\n"); 
     }
-
-    if(nextFileHdr != NULL)
-    {
-        nextFileHdr->DebugRecursive(layer + 1);
-    }
-
-    delete[] data;
+    delete [] data;
 }
