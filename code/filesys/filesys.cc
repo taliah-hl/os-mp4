@@ -209,7 +209,7 @@ int FileSystem::CreateAFile(char * name, int initialSize){
 bool
 FileSystem::Create(char *name, int initialSize)
 {
-    DEBUG(dbgFile, "FileSystem::Create Creating file" << name << " size " << initialSize);
+    DEBUG(dbgMp4, "FileSystem::Create Creating file" << name << " size " << initialSize);
     Directory *directory;
     PersistentBitmap *freeMap;
     FileHeader *hdr;
@@ -267,16 +267,17 @@ FileSystem::Open(char *name)
 { 
     DEBUG(dbgFile, "FileSystem::Open opening file " << name);
     Directory *directory = new Directory(NumDirEntries);
-    OpenFile *openFile = NULL;
     int sector;
 
     DEBUG(dbgFile, "Opening file" << name);
     directory->FetchFrom(directoryFile);
     sector = directory->Find(name); 
     if (sector >= 0) 		
-	openFile = new OpenFile(sector);	// name was found in directory 
+	openedFile = new OpenFile(sector);	// name was found in directory 
+    if(openedFile == NULL) 
+        DEBUG(dbgMach, "cannot get file from new OpenFile(sector),openedFile is NULL");
     delete directory;
-    return openFile;				// return NULL if not found
+    return openedFile;				// return NULL if not found
 }
 
 OpenFileId FileSystem::OpenAFile(char *name){
