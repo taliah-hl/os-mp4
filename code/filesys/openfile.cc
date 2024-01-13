@@ -116,6 +116,7 @@ int OpenFile::ReadAt(char *into, int numBytes, int position)
 // return: numBytes read
 {
     int fileLength = hdr->FileLength(); 
+    int nextHdr = hdr->GetNextFileHdrSector();
     // fileheader::filelength() has already changed to fit new file header structure
 
     // below part also no need to change because Fileheader::ByteToSector already changed to fit new file header structure
@@ -127,7 +128,7 @@ int OpenFile::ReadAt(char *into, int numBytes, int position)
     if ((position + numBytes) > fileLength)		
 	numBytes = fileLength - position;
     DEBUG(dbgFile, "Reading " << numBytes << " bytes at " << position << " from file of length " << fileLength);
-    DEBUG(dbgMp4, "Reading " << numBytes << " bytes at " << position << " from file of length " << fileLength);
+    DEBUG(dbgMp4, "next header is at sector: " << nextHdr << "\n");
 
     firstSector = divRoundDown(position, SectorSize);
     lastSector = divRoundDown(position + numBytes - 1, SectorSize);

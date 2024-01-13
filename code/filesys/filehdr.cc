@@ -43,7 +43,6 @@ FileHeader::FileHeader()
 	numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
-	lastOccupiedIdx = -1;
 	nextFileHdrSector = -1;
 	nextFileHdr=NULL;
 }
@@ -155,7 +154,8 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
 void FileHeader::FetchFrom(int sector)
 {
 	DEBUG(dbgMp4, "FileHeader::FetchFrom is fetching from sector " << sector);
-	kernel->synchDisk->ReadSector(sector, (char *)this);
+	//kernel->synchDisk->ReadSector(sector, (char *)this);
+	kernel->synchDisk->ReadSector(sector, ((char *)this) + sizeof(FileHeader*));
 	
 	/*
 		MP4 Hint:
@@ -179,7 +179,8 @@ void FileHeader::FetchFrom(int sector)
 void FileHeader::WriteBack(int sector)
 {
 	DEBUG(dbgMp4, "FileHeader::WriteBack is running");
-	kernel->synchDisk->WriteSector(sector, (char *)this); 
+	//kernel->synchDisk->WriteSector(sector, (char *)this); 
+	kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
 
 	/*
 		MP4 Hint:
@@ -229,6 +230,7 @@ int FileHeader::ByteToSector(int offset)
 int FileHeader::FileLength()	// Return the length of total file
 {
 	
+	
 	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
 		DEBUG(dbgMp4, "in FileHeader::FileLength, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
 	}
@@ -249,6 +251,7 @@ int FileHeader::FileLength()	// Return the length of total file
 
 void FileHeader::Print()
 {
+	DEBUG(dbgMp4, "FileHeader::Print is called");
 	int i, j, k;
 	char *data = new char[SectorSize];
 
@@ -269,4 +272,34 @@ void FileHeader::Print()
 		printf("\n");
 	}
 	delete[] data;
+}
+
+void FileHeader::DebugRecursive(int layer)
+{
+    int i;
+    char *data = new char[SectorSize];
+
+    printf("Layer %d, Sector number: %d, File size: %d. File blocks:\n", layer, nextFileHdrSector, numBytes);
+    for (i = 0; i < numSectors; i++)
+        printf("%d ", dataSectors[i]);
+    printf("\nFile contents:\n");
+    for (i = 0; i < numSectors; i++)
+    {
+        kernel->synchDisk->ReadSector(dataSectors[i], data);
+        for (int j = 0; j < SectorSize; j++)
+        {
+            if ('\040' <= data[j] && data[j] <= '\176') // isprint(data[j])
+                printf("%c", data[j]);
+            else
+                printf("\\%x", (unsigned char)data[j]);
+        }
+        printf("\n");
+    }
+
+    if(nextFileHdr != NULL)
+    {
+        nextFileHdr->DebugRecursive(layer + 1);
+    }
+
+    delete[] data;
 }

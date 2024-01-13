@@ -17,7 +17,7 @@
 #include "disk.h"
 #include "pbitmap.h"
 
-#define NumDirect ((SectorSize - 2 * sizeof(int)) / sizeof(int))
+#define NumDirect ((SectorSize - 3 * sizeof(int)) / sizeof(int))
 // sector size = 128
 // = 128 - (2 * 4) / 4 = 30
 #define MaxFileSize (NumDirect * SectorSize)
@@ -63,7 +63,12 @@ public:
 	// 在第一層被call = 算整個file長度
 	// Return the length of below layers file// in bytes
 	
+	void DebugRecursive(int layer); // debug用的recursive func
+								  // layer = 0 (top layer
 
+	int GetNextFileHdrSector(){
+		return nextFileHdrSector;
+	}
 
 					  
 
@@ -103,12 +108,6 @@ private:
 	
 	int nextFileHdrSector;    // sector number of the next file header (means addr of next header)
 	// -1 = this is last  file header
-	int lastOccupiedIdx;   // last occupied index in dataSectors 
-	// -1 = no occupied
-	// if lastOccupiedIdx== NumDirect -1 means full -> need to use next sector
-
-	int AllocateThisLayer(PersistentBitmap *freeMap, int layerSize);
-	//return: addr of this layer file header
 
 
 };
