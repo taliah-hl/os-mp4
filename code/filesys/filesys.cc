@@ -198,6 +198,7 @@ FileSystem::~FileSystem()
 //----------------------------------------------------------------------
 
 int FileSystem::CreateAFile(char * name, int initialSize){
+    DEBUG(dbgMp4, "Filesystem::CreateAFile is called");
     bool res = Create(name, initialSize);
     if(res) return 1;
     else return -1;
@@ -208,6 +209,7 @@ int FileSystem::CreateAFile(char * name, int initialSize){
 bool
 FileSystem::Create(char *name, int initialSize)
 {
+    DEBUG(dbgFile, "FileSystem::Create Creating file" << name << " size " << initialSize);
     Directory *directory;
     PersistentBitmap *freeMap;
     FileHeader *hdr;
@@ -263,6 +265,7 @@ FileSystem::Create(char *name, int initialSize)
 OpenFile *
 FileSystem::Open(char *name)
 { 
+    DEBUG(dbgFile, "FileSystem::Open opening file " << name);
     Directory *directory = new Directory(NumDirEntries);
     OpenFile *openFile = NULL;
     int sector;
@@ -277,6 +280,7 @@ FileSystem::Open(char *name)
 }
 
 OpenFileId FileSystem::OpenAFile(char *name){
+    DEBUG(dbgMp4, "FileSystem::OpenAFile is called");
     Open(name);
     return 1;   // dummy openFileId
 }
@@ -285,6 +289,7 @@ OpenFileId FileSystem::OpenAFile(char *name){
 // ------ below add by me for MP4 --------
 int FileSystem::Read(char *buf, int size, OpenFileId id){   //return numbyte read, -1 means failed
     
+    DEBUG(dbgMp4, "FileSystem::Read, reading file");
     OpenFile* fileToRead = openedFile;
     if (fileToRead == NULL){
         DEBUG(dbgFile, "openedFile is NULL, read failed");
@@ -300,7 +305,7 @@ int FileSystem::Read(char *buf, int size, OpenFileId id){   //return numbyte rea
 int FileSystem::Write(char *buf, int size, OpenFileId id){
     // retuen num byte written
     // -1 means failed
-    
+    DEBUG(dbgMp4, "FileSystem::Write, writing file");
     OpenFile* fileToWrite = openedFile;
     if(fileToWrite == NULL){
         DEBUG(dbgFile, "openedFile is NULL, write failed");

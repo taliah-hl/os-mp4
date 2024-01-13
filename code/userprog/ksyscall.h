@@ -38,26 +38,31 @@ int SysCreate(char *filename)
 // 200112[J]: MP4�s�W
 int SysCreate(char *filename, int size)
 {
-	return kernel->fileSystem->CreateAFile(filename, size);
+	DEBUG(dbgMp4, "Syscreatein ksyscall.h is called");
+  return kernel->fileSystem->CreateAFile(filename, size);
 }
 
 OpenFileId SysOpen(char *name)
 {
+  DEBUG(dbgMp4, "SysOpen in ksyscall.h is called");
   return kernel->fileSystem->OpenAFile(name);
 }
 
 int SysWrite(char *buffer, int size, OpenFileId id)
 {
+  DEBUG(dbgMp4, "SysWrite in ksyscall.h is called");
   return kernel->fileSystem->Write(buffer, size, id);
 }
 
 int SysRead(char *buffer, int size, OpenFileId id)
 {
+  DEBUG(dbgMp4, "SysRead in ksyscall.h is called");
   return kernel->fileSystem->Read(buffer, size, id);
 }
 
 int SysClose(OpenFileId id)
 {
+  DEBUG(dbgMp4, "SysClose in ksyscall.h is called");
   return kernel->fileSystem->Close(id);
 }
 // **********************************************************************

@@ -107,11 +107,11 @@ typedef int OpenFileId;
 #define SysConsoleInput	0  
 #define SysConsoleOutput	1  
 
-//****************** J: 200112: MP4需實作的幾個函數 ******
+
 /* Create a Nachos file, with name "name" */
 /* Note: Create does not open the file.   */
 /* Return 1 on success, negative error code on failure */
-// J: 200112: 修改Signature，新增一個size選項
+
 int Create(char *name, int size);
 
 /* Open the Nachos file "name", and return an "OpenFileId" that can 
