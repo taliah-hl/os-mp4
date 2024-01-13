@@ -25,7 +25,7 @@ To test FS_test1, we have to compile FS_test1.c and copy it to the NachOS first.
 `../build.linux/nachos -e /FS_test2`
 
 
-## Test case IIb
+## Test case IIa (no -x)
 
 `../build.linux/nachos -f`
 
@@ -39,14 +39,70 @@ To test FS_test1, we have to compile FS_test1.c and copy it to the NachOS first.
 
 `../build.linux/nachos -e /FS_test2`
 
+## Test case IIb
+
+`../build.linux/nachos -f`
+
+`../build.linux/nachos -cp num_100.txt /100`
+
+`../build.linux/nachos -cp num_1000.txt /1000	`
+
+`../build.linux/nachos -p /1000`
+
+`../build.linux/nachos -p /100`
+
+`../build.linux/nachos -l /`
 
 ## Test case III
+
+
+`../build.linux/nachos -f`
+
+`../build.linux/nachos -mkdir /t0`
+
+`../build.linux/nachos -mkdir /t1`
+
+`../build.linux/nachos -mkdir /t2`
+
+`../build.linux/nachos -cp num_100.txt /t0/f1`
+
+`../build.linux/nachos -mkdir /t0/aa`
+
+`../build.linux/nachos -mkdir /t0/bb`
+
+`../build.linux/nachos -mkdir /t0/cc`
+
+`../build.linux/nachos -cp num_100.txt /t0/bb/f1`
+
+`../build.linux/nachos -cp num_100.txt /t0/bb/f2`
+
+`../build.linux/nachos -cp num_100.txt /t0/bb/f3`
+
+`../build.linux/nachos -cp num_100.txt /t0/bb/f4`
+
+`../build.linux/nachos -l /`
+
+`../build.linux/nachos -l /t0`
+
+
+`../build.linux/nachos -lr /`
+
+`../build.linux/nachos -p /t0/f1`
+
+`../build.linux/nachos -p /t0/bb/f3`
+
+
+
+## 3 Test cases .sh
 
 `./FS_partII_a.sh`
 
 `./FS_partII_b.sh`
 
+`./FS_partIII.sh`
+
 `./mp4-check.sh`
+
 
 
 ## Things about size
