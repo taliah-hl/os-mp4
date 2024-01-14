@@ -277,7 +277,7 @@ FileSystem::Open(char *name)
     }
     else{
         openedFile = NULL;
-        DEBUG(dbgMp4, "file "<< name << " not found in directory");
+        DEBUG(dbgMp4, "file "<< name << " not found in directory, sector = "<< sector);
     }
 	
     if(openedFile == NULL) 

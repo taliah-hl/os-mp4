@@ -34,8 +34,8 @@
 FileHeader::FileHeader()
 {
   // MP4 add
-  nextFileHeader = NULL;
-	nextFileHeaderSector = -1;
+  nextFileHdr = NULL;
+	nextFileHdrSector = -1;
 	// end
   numBytes = -1;
 	numSectors = -1;
@@ -52,8 +52,8 @@ FileHeader::FileHeader()
 FileHeader::~FileHeader()
 {
   // MP4 add
-	if (nextFileHeader != NULL)
-		delete nextFileHeader;
+	if (nextFileHdr != NULL)
+		delete nextFileHdr;
   // end
 }
 
@@ -72,7 +72,7 @@ FileHeader::~FileHeader()
 bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 { 
     // 本層FH要存的Bytes
-    numBytes = fileSize < MaxFileSize ? fileSize : MaxFileSize;
+    numBytes = fileSize < LayerMaxSize ? fileSize : LayerMaxSize;
     // 剩下要存的Bytes
     fileSize -= numBytes;	// 計仲剩低幾多Bytes可用
     // 幫本層分配Data Sectors
@@ -87,12 +87,12 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
     }
     // 分配完本層，再多分配一個Link指向下一個FH
     if (fileSize > 0) {
-        nextFileHeaderSector = freeMap->FindAndSet();  // 為了確認有沒有Free Sector
-        if (nextFileHeaderSector == -1)  // 沒有Free Sector
+        nextFileHdrSector = freeMap->FindAndSet();  // 為了確認有沒有Free Sector
+        if (nextFileHdrSector == -1)  // 沒有Free Sector
  			      return FALSE;
   		  else {
- 			      nextFileHeader = new FileHeader;
- 			      return nextFileHeader->Allocate(freeMap, fileSize);
+ 			      nextFileHdr = new FileHeader;
+ 			      return nextFileHdr->Allocate(freeMap, fileSize);
         }
 	  }
     return TRUE;
@@ -112,10 +112,10 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
       ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
       freeMap->Clear((int)dataSectors[i]);
   	}
-  	if (nextFileHeaderSector != -1)
+  	if (nextFileHdrSector != -1)
   	{
- 		  ASSERT(nextFileHeader != NULL);
- 		  nextFileHeader->Deallocate(freeMap);
+ 		  ASSERT(nextFileHdr != NULL);
+ 		  nextFileHdr->Deallocate(freeMap);
   	}
 }
 // end*******************************************
@@ -133,10 +133,10 @@ void FileHeader::FetchFrom(int sector)
     kernel->synchDisk->ReadSector(sector, ((char *)this) + sizeof(FileHeader*));
     //DEBUG(dbgFile, "Test[J]: Done");
     
-    if (nextFileHeaderSector != -1)
+    if (nextFileHdrSector != -1)
 	  { 
-		    nextFileHeader = new FileHeader;
-		    nextFileHeader->FetchFrom(nextFileHeaderSector);
+		    nextFileHdr = new FileHeader;
+		    nextFileHdr->FetchFrom(nextFileHdrSector);
 	  }
 	/*
 		MP4 Hint:
@@ -156,10 +156,10 @@ void FileHeader::WriteBack(int sector)
 {
     kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
 	  
-    if (nextFileHeaderSector != -1)
+    if (nextFileHdrSector != -1)
 	  {
-        ASSERT(nextFileHeader != NULL);
-		    nextFileHeader->WriteBack(nextFileHeaderSector);
+        ASSERT(nextFileHdr != NULL);
+		    nextFileHdr->WriteBack(nextFileHdrSector);
 	  }
 	/*
 		MP4 Hint:
@@ -189,8 +189,8 @@ int FileHeader::ByteToSector(int offset)
   		 return (dataSectors[index]);
   	else
   	{
-  		 ASSERT(nextFileHeader != NULL);
-  		 return nextFileHeader->ByteToSector(offset - MaxFileSize);
+  		 ASSERT(nextFileHdr != NULL);
+  		 return nextFileHdr->ByteToSector(offset - LayerMaxSize);
   	}
 }
 // end **************************************************

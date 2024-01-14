@@ -13,8 +13,8 @@
 #include "disk.h"
 #include "pbitmap.h"
 
-#define NumDirect 	((SectorSize - 3 * sizeof(int)) / sizeof(int))  // ­ì¥»¬O -2 ¡A§ï¦¨-3 ¦h¦s¤@­Ó«ü¼Ð
-#define MaxFileSize 	(NumDirect * SectorSize)
+#define NumDirect 	((SectorSize - 3 * sizeof(int)) / sizeof(int))  // ï¿½ì¥»ï¿½O -2 ï¿½Aï¿½ï¦¨-3 ï¿½hï¿½sï¿½@ï¿½Ó«ï¿½ï¿½ï¿½
+#define LayerMaxSize 	(NumDirect * SectorSize)
 
 // The following class defines the Nachos "file header" (in UNIX terms, the **"i-node"**), 
 // describing where on disk to find all of the data in the file.
@@ -57,9 +57,9 @@ class FileHeader {
     // Print the contents of the file.
     void Print();
     
-    // J: MP4·s¼W¥\¯à¡A¬°¤F¨ú±o¤U¤@­ÓLinkªº«ü¼Ð
-    FileHeader* getNextFileHeader() { return nextFileHeader;}
-    int HeaderLength(); // ·s¼W¡A¦^¶ÇHeadr¦³´X®æ
+    // J: MP4ï¿½sï¿½Wï¿½\ï¿½ï¿½Aï¿½ï¿½ï¿½Fï¿½ï¿½ï¿½oï¿½Uï¿½@ï¿½ï¿½Linkï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    FileHeader* getNextFileHeader() { return nextFileHdr;}
+    int HeaderLength(); // ï¿½sï¿½Wï¿½Aï¿½^ï¿½ï¿½Headrï¿½ï¿½ï¿½Xï¿½ï¿½
     // ******************************************
   private:
 	/*
@@ -76,14 +76,14 @@ class FileHeader {
 		written to a sector on disk**.
 		In-core part - none
 	*/
-    // J: MP4·s¼W *******************************
-    FileHeader* nextFileHeader;  // (in-core) ³o­Ó­n¥Ã»·©ñ¦b²Ä¤@®æ!!!!!!
+    // J: MP4ï¿½sï¿½W *******************************
+    FileHeader* nextFileHdr;  // (in-core) ï¿½oï¿½Ó­nï¿½Ã»ï¿½ï¿½ï¿½bï¿½Ä¤@ï¿½ï¿½!!!!!!
     // ******************************************
     int numBytes;		  	         // Number of bytes in the file
     int numSectors;			         // Number of data sectors in the file
     int dataSectors[NumDirect];  // Disk sector numbers for each data block in the file
-    // J: MP4·s¼W *******************************
-    int nextFileHeaderSector;    // (in-disk) 
+    // J: MP4ï¿½sï¿½W *******************************
+    int nextFileHdrSector;    // (in-disk) 
     // ******************************************
 };
 
