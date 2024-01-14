@@ -220,10 +220,18 @@ int FileHeader::ByteToSector(int offset)
 // 	Return the number of bytes in the file.
 //----------------------------------------------------------------------
 
-int
-FileHeader::FileLength()
+int FileHeader::FileLength()	// Return the length of total file
 {
-    return numBytes;
+	
+	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
+		DEBUG(dbgMp4, "in FileHeader::FileLength, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
+	}
+	if(nextFileHdr != NULL){
+		int len = numBytes + nextFileHdr->FileLength();
+		return len;
+	}
+	return numBytes;
+	
 }
 
 //----------------------------------------------------------------------

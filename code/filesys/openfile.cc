@@ -114,7 +114,8 @@ OpenFile::Write(char *into, int numBytes)
 
 int OpenFile::ReadAt(char *into, int numBytes, int position)
 {
-    int fileLength = Length();
+    int fileLength = hdr->FileLength(); 
+    // fileheader::filelength() has already changed to fit new file header structure
     int i, firstSector, lastSector, numSectors;
     char *buf;
 
@@ -142,7 +143,8 @@ int OpenFile::ReadAt(char *into, int numBytes, int position)
 
 int OpenFile::WriteAt(char *from, int numBytes, int position)
 {
-    int fileLength = Length();
+    int fileLength = hdr->FileLength(); 
+    // fileheader::filelength() has already changed to fit new file header structure
     int i, firstSector, lastSector, numSectors;
     bool firstAligned, lastAligned;
     char *buf;
@@ -183,22 +185,5 @@ int OpenFile::WriteAt(char *from, int numBytes, int position)
     return numBytes;
 }
 
-//----------------------------------------------------------------------
-// OpenFile::Length
-// 	Return the number of bytes in the file.
-//----------------------------------------------------------------------
-// MP4 *******************************************
-int
-OpenFile::Length() 
-{ 
-    int length = 0;
-    FileHeader *nextHdr = hdr;
-    while (nextHdr != NULL)
-    {
-        length += nextHdr->FileLength();
-        nextHdr = nextHdr->getNextFileHeader();
-    }
-    return length;
-}
-// end*******************************************
+
 #endif //FILESYS_STUB

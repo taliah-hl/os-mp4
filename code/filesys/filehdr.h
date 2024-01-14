@@ -57,10 +57,12 @@ class FileHeader {
     // Print the contents of the file.
     void Print();
     
-    // J: MP4�s�W�\��A���F���o�U�@��Link������
-    FileHeader* getNextFileHeader() { return nextFileHdr;}
-    int HeaderLength(); // �s�W�A�^��Headr���X��
-    // ******************************************
+
+    FileHeader* GetNextHdr() { return nextFileHdr;}
+
+    int ThisLayerNumBytes() { return numBytes;}
+
+
   private:
 	/*
 		MP4 hint:
