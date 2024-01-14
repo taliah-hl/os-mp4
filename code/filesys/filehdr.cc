@@ -37,7 +37,8 @@ FileHeader::FileHeader()
   nextFileHdr = NULL;
 	nextFileHdrSector = -1;
 	//-----------------
-  numBytes = -1;
+	// 重要!! 次序不可改!!!!!
+  	numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
 }
@@ -51,10 +52,10 @@ FileHeader::FileHeader()
 //----------------------------------------------------------------------
 FileHeader::~FileHeader()
 {
-  // MP4 add
+  
 	if (nextFileHdr != NULL)
 		delete nextFileHdr;
-  // end
+  
 }
 
 //----------------------------------------------------------------------
@@ -71,30 +72,40 @@ FileHeader::~FileHeader()
 
 bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 { 
-    // 本層FH要存的Bytes
+	DEBUG(dbgMp4, "FileHeader::Allocate is allocating fileSize: " << fileSize);
     numBytes = fileSize < LayerMaxSize ? fileSize : LayerMaxSize;
-    // 剩下要存的Bytes
-    fileSize -= numBytes;	// 計仲剩低幾多Bytes可用
-    // 幫本層分配Data Sectors
+    
+    int notAllocatedBytes = fileSize - numBytes;	// 這層layer不夠位裝的byte數
+    
     numSectors = divRoundUp(numBytes, SectorSize);
     
     if (freeMap->NumClear() < numSectors)
 	    return FALSE;		// not enough space
 
     for (int i = 0; i < numSectors; i++) {
-    	dataSectors[i] = freeMap->FindAndSet();
-    	ASSERT(dataSectors[i] >= 0);  // since we checked that there was enough free space, we expect this to succeed
+    	dataSectors[i] = freeMap->FindAndSet();// 找出freeMap中第一格not in use 的index
+    	// if -1 means all are used
+		ASSERT(dataSectors[i] >= 0);  
+		
+		// since we checked that there was enough free space, we expect this to succeed
     }
-    // 分配完本層，再多分配一個Link指向下一個FH
-    if (fileSize > 0) {
-        nextFileHdrSector = freeMap->FindAndSet();  // 為了確認有沒有Free Sector
-        if (nextFileHdrSector == -1)  // 沒有Free Sector
- 			      return FALSE;
-  		  else {
- 			      nextFileHdr = new FileHeader;
- 			      return nextFileHdr->Allocate(freeMap, fileSize);
-        }
-	  }
+    if(notAllocatedBytes > 0){
+		// allocate next layer
+		nextFileHdrSector = freeMap->FindAndSet();
+		if (nextFileHdrSector < 0){
+			DEBUG(dbgMp4, "in FileHeader::Allocate: no enough space for next layer");
+			return FALSE;
+		}
+		DEBUG(dbgMp4, "in FileHeader::Allocate, allocated to sector " << nextFileHdrSector);
+			
+		nextFileHdr = new FileHeader();
+		
+		ASSERT(nextFileHdrSector >= 0);
+		// allocate next layer
+		return nextFileHdr->Allocate(freeMap, notAllocatedBytes);	
+		// return success or not from next layer 
+	}
+    
     return TRUE;
 }
 
@@ -108,7 +119,8 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 
 void FileHeader::Deallocate(PersistentBitmap *freeMap)
 {
-    for (int i = 0; i < numSectors; i++) {
+    DEBUG(dbgMp4, "FileHeader::Deallocate is called");
+	for (int i = 0; i < numSectors; i++) {
       ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
       freeMap->Clear((int)dataSectors[i]);
   	}
@@ -129,9 +141,9 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
 
 void FileHeader::FetchFrom(int sector)
 {
-    //DEBUG(dbgFile, "Test[J]: kernel->synchDisk->ReadSector");
+    DEBUG(dbgMp4, "FileHeader::FetchFrom is fetching from sector " << sector);
     kernel->synchDisk->ReadSector(sector, ((char *)this) + sizeof(FileHeader*));
-    //DEBUG(dbgFile, "Test[J]: Done");
+
     
     if (nextFileHdrSector != -1)
 	  { 
@@ -154,7 +166,8 @@ void FileHeader::FetchFrom(int sector)
 
 void FileHeader::WriteBack(int sector)
 {
-    kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
+    DEBUG(dbgMp4, "FileHeader::WriteBack is running");
+	kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
 	  
     if (nextFileHdrSector != -1)
 	  {
@@ -184,7 +197,8 @@ void FileHeader::WriteBack(int sector)
 
 int FileHeader::ByteToSector(int offset)
 {
-    int index = offset / SectorSize;
+    DEBUG(dbgMp4, "in FileHeader::ByteToSector, offset = " << offset);
+	int index = offset / SectorSize;
   	if (index < NumDirect)
   		 return (dataSectors[index]);
   	else
