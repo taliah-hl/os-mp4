@@ -33,10 +33,10 @@
 //----------------------------------------------------------------------
 FileHeader::FileHeader()
 {
-  // MP4 add
+  // ----------------
   nextFileHdr = NULL;
 	nextFileHdrSector = -1;
-	// end
+	//-----------------
   numBytes = -1;
 	numSectors = -1;
 	memset(dataSectors, -1, sizeof(dataSectors));
@@ -68,7 +68,7 @@ FileHeader::~FileHeader()
 //	"fileSize" is the bit map of free disk sectors
 //----------------------------------------------------------------------
 
-// MP4 Modified********************************
+
 bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 { 
     // 本層FH要存的Bytes
@@ -97,7 +97,7 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 	  }
     return TRUE;
 }
-// end*******************************************
+
 
 //----------------------------------------------------------------------
 // FileHeader::Deallocate
@@ -105,7 +105,7 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 //
 //	"freeMap" is the bit map of free disk sectors
 //----------------------------------------------------------------------
-// MP4 Modified********************************
+
 void FileHeader::Deallocate(PersistentBitmap *freeMap)
 {
     for (int i = 0; i < numSectors; i++) {
@@ -118,7 +118,7 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
  		  nextFileHdr->Deallocate(freeMap);
   	}
 }
-// end*******************************************
+
 
 //----------------------------------------------------------------------
 // FileHeader::FetchFrom
@@ -126,7 +126,7 @@ void FileHeader::Deallocate(PersistentBitmap *freeMap)
 //
 //	"sector" is the disk sector containing the file header
 //----------------------------------------------------------------------
-// MP4 Modified********************************
+
 void FileHeader::FetchFrom(int sector)
 {
     //DEBUG(dbgFile, "Test[J]: kernel->synchDisk->ReadSector");
@@ -143,7 +143,7 @@ void FileHeader::FetchFrom(int sector)
 		After you add some in-core informations, you will need to rebuild the header's structure
 	*/
 }
-// end*******************************************
+
 
 //----------------------------------------------------------------------
 // FileHeader::WriteBack
@@ -151,7 +151,7 @@ void FileHeader::FetchFrom(int sector)
 //
 //	"sector" is the disk sector to contain the file header
 //----------------------------------------------------------------------
-// MP4 Modified********************************
+
 void FileHeader::WriteBack(int sector)
 {
     kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
@@ -170,7 +170,7 @@ void FileHeader::WriteBack(int sector)
 		...
 	*/
 }
-// end*******************************************
+
 
 //----------------------------------------------------------------------
 // FileHeader::ByteToSector
@@ -181,7 +181,7 @@ void FileHeader::WriteBack(int sector)
 //
 //	"offset" is the location within the file of the byte in question
 //----------------------------------------------------------------------
-// MP4 **************************************************
+
 int FileHeader::ByteToSector(int offset)
 {
     int index = offset / SectorSize;
@@ -193,7 +193,7 @@ int FileHeader::ByteToSector(int offset)
   		 return nextFileHdr->ByteToSector(offset - LayerMaxSize);
   	}
 }
-// end **************************************************
+
 
 //----------------------------------------------------------------------
 // FileHeader::FileLength

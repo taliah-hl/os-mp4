@@ -76,15 +76,15 @@ class FileHeader {
 		written to a sector on disk**.
 		In-core part - none
 	*/
-    // J: MP4�s�W *******************************
-    FileHeader* nextFileHdr;  // (in-core) �o�ӭn�û���b�Ĥ@��!!!!!!
-    // ******************************************
+
+    FileHeader* nextFileHdr;  
+//--------------------------------------
     int numBytes;		  	         // Number of bytes in the file
     int numSectors;			         // Number of data sectors in the file
     int dataSectors[NumDirect];  // Disk sector numbers for each data block in the file
-    // J: MP4�s�W *******************************
-    int nextFileHdrSector;    // (in-disk) 
-    // ******************************************
+
+    int nextFileHdrSector;    
+
 };
 
 #endif // FILEHDR_H
