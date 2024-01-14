@@ -119,17 +119,20 @@ bool FileHeader::Allocate(PersistentBitmap *freeMap, int fileSize)
 
 void FileHeader::Deallocate(PersistentBitmap *freeMap)
 {
-    DEBUG(dbgMp4, "FileHeader::Deallocate is called");
-	for (int i = 0; i < numSectors; i++) {
-      ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
-      freeMap->Clear((int)dataSectors[i]);
-  	}
-  	if (nextFileHdrSector != -1)
-  	{
- 		  ASSERT(nextFileHdr != NULL);
- 		  nextFileHdr->Deallocate(freeMap);
-  	}
+	DEBUG(dbgMp4, "FileHeader::Deallocate is called");
+	for (int i = 0; i < numSectors; i++)
+	{
+		ASSERT(freeMap->Test((int)dataSectors[i])); // ought to be marked!
+		freeMap->Clear((int)dataSectors[i]);
+	}
+	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
+		DEBUG(dbgMp4, "in FileHeader::Deallocate, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
+	}
+	if(nextFileHdr != NULL){
+		nextFileHdr->Deallocate(freeMap);
+	}
 }
+
 
 
 //----------------------------------------------------------------------
@@ -169,11 +172,7 @@ void FileHeader::WriteBack(int sector)
     DEBUG(dbgMp4, "FileHeader::WriteBack is running");
 	kernel->synchDisk->WriteSector(sector, ((char *)this) + sizeof(FileHeader*)); 
 	  
-    if (nextFileHdrSector != -1)
-	  {
-        ASSERT(nextFileHdr != NULL);
-		    nextFileHdr->WriteBack(nextFileHdrSector);
-	  }
+    
 	/*
 		MP4 Hint:
 		After you add some in-core informations, you may not want to write all fields into disk.
@@ -182,6 +181,12 @@ void FileHeader::WriteBack(int sector)
 		memcpy(buf + offset, &dataToBeWritten, sizeof(dataToBeWritten));
 		...
 	*/
+	if((nextFileHdrSector != -1) && (nextFileHdr == NULL) ){
+		DEBUG(dbgMp4, "in FileHeader::WriteBack, potential error: nextFileHdrSector != -1 but nextFileHdr == NULL");
+	}
+	if(nextFileHdr != NULL){
+		nextFileHdr->WriteBack(nextFileHdrSector);
+	}
 }
 
 
@@ -198,14 +203,15 @@ void FileHeader::WriteBack(int sector)
 int FileHeader::ByteToSector(int offset)
 {
     DEBUG(dbgMp4, "in FileHeader::ByteToSector, offset = " << offset);
-	int index = offset / SectorSize;
-  	if (index < NumDirect)
-  		 return (dataSectors[index]);
-  	else
-  	{
-  		 ASSERT(nextFileHdr != NULL);
-  		 return nextFileHdr->ByteToSector(offset - LayerMaxSize);
-  	}
+	int idx = offset / SectorSize;
+	if(idx >= NumDirect){
+		if(nextFileHdr == NULL){
+			DEBUG(dbgMp4, "in FileHeader::ByteToSector, potential error: filesize > MaxFilesize but no next file header");
+			ASSERT(FALSE); // kill the program
+		}
+		return nextFileHdr->ByteToSector(offset - LayerMaxSize);
+	}
+	return (dataSectors[idx]);
 }
 
 
