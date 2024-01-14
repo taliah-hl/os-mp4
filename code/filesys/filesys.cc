@@ -272,10 +272,16 @@ FileSystem::Open(char *name)
     DEBUG(dbgFile, "Opening file" << name);
     directory->FetchFrom(directoryFile);
     sector = directory->Find(name); 
-    if (sector >= 0) 		
-	openedFile = new OpenFile(sector);	// name was found in directory 
+    if (sector >= 0){
+        openedFile = new OpenFile(sector);	// name was found in directory 
+    }
+    else{
+        openedFile = NULL;
+        DEBUG(dbgMp4, "file "<< name << " not found in directory");
+    }
+	
     if(openedFile == NULL) 
-        DEBUG(dbgMach, "cannot get file from new OpenFile(sector),openedFile is NULL");
+        DEBUG(dbgMp4,"cannot get file from new OpenFile(sector),openedFile is NULL");
     delete directory;
     return openedFile;				// return NULL if not found
 }
